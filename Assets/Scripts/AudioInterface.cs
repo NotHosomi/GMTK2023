@@ -52,7 +52,7 @@ public class AudioInterface : MonoBehaviour
                 _i.playPieceMove();
                 break;
             case E_Sound.PieceMoveWithSpawn:
-                _i.playPieceWithSpawn();
+                _i.playPieceMoveWithSpawn();
                 break;
             case E_Sound.PieceDemote:
                 _i.playPieceDemote();
@@ -96,14 +96,16 @@ public class AudioInterface : MonoBehaviour
         asource.Play();
     }
 
-    void playPieceWithSpawn()
+    void playPieceMoveWithSpawn()
     {
-
+        // temp
+        playPieceMove();
     }
 
     void playPieceDemote()
     {
-
+        // temp
+        playPieceMove();
     }
 
     void playWin()
@@ -129,6 +131,7 @@ public class AudioInterface : MonoBehaviour
 
     void playButtonHover()
     {
-
+        // temp
+        playPieceHover();
     }
 }
