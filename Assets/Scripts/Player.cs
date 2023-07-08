@@ -121,7 +121,7 @@ public class Player : MonoBehaviour
             E_FailState state = Board._i.checkFail(ref indicators);
             if (state != E_FailState.None)
             {
-                onLoss(state, indicators);
+                onFail(state, indicators);
             }
             // AI turn
             StartCoroutine(aiTurn());
@@ -173,7 +173,7 @@ public class Player : MonoBehaviour
         AudioInterface.play(E_Sound.Win);
     }
 
-    public void onLoss(E_FailState failtype, List<Vector2> failIndicators)
+    public void onFail(E_FailState failtype, List<Vector2> failIndicators)
     {
         string failmessage = "";
         switch(failtype)
@@ -206,6 +206,7 @@ public class Player : MonoBehaviour
                 break;
         }
         failNotif.SetActive(true);
+        failNotif.GetComponent<SpriteRenderer>().color = Color.white;
         failNotif.GetComponent<WarningHover>().SetWarning(true, failmessage);
         AudioInterface.play(E_Sound.Loss);
     }
@@ -221,5 +222,15 @@ public class Player : MonoBehaviour
     {
         Debug.Log("Restart");
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void Undo()
+    {
+        Color c = failNotif.GetComponent<SpriteRenderer>().color;
+        c.r = 80;
+        c.g = 80;
+        c.b = 80;
+        failNotif.GetComponent<SpriteRenderer>().color = c;
+        Board._i.undo();
     }
 }
