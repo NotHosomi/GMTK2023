@@ -46,7 +46,13 @@ public class Square
     public E_PieceType rollSpawn(E_Team team, E_SpawnCmd spawn_flag = E_SpawnCmd.chance)
     {
         const int MAX_SPAWNLESS = 8;
+        team = Player.otherPlayer(team);
         E_PieceType spawned = E_PieceType.None;
+
+        if (Piece.s_tPieces[(int)team].nPieces >=16)
+        {
+            return spawned;
+        }
         switch (spawn_flag)
         {
             case E_SpawnCmd.cannot:

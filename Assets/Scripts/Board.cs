@@ -70,14 +70,6 @@ public class Board : MonoBehaviour
 
         // TODO: if the move matches next in the move list, then its just a redo
 
-        E_SpawnCmd pawn_flag = E_SpawnCmd.chance;
-        if (piece.getType() == E_PieceType.Pawn)
-        {
-            if (x != oldX)
-                pawn_flag = E_SpawnCmd.must;
-            else
-                pawn_flag = E_SpawnCmd.cannot;
-        }
         E_PieceType spawn = piece.move(x, y);
         history.Add(new Move( oldX, oldY, x, y, spawn));
     }
@@ -191,8 +183,9 @@ public class Board : MonoBehaviour
         createPiece(1, 5, E_PieceType.Pawn, E_Team.Black);
         createPiece(2, 4, E_PieceType.Pawn, E_Team.Black);
         createPiece(7, 1, E_PieceType.Rook, E_Team.White);
-        createPiece(7, 1, E_PieceType.Rook, E_Team.White);
+        createPiece(5, 2, E_PieceType.Pawn, E_Team.Black);
         createPiece(3, 4, E_PieceType.Bish, E_Team.White);
+        createPiece(0, 4, E_PieceType.Pawn, E_Team.White);
     }
 
     public void filterMoveset(ref List<Vector2> moveset, E_Team currentPlayer, Piece piece)
