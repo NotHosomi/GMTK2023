@@ -71,7 +71,11 @@ public class Board : MonoBehaviour
         // TODO: if the move matches next in the move list, then its just a redo
 
         E_PieceType spawn = piece.move(x, y);
-        history.Add(new Move( oldX, oldY, x, y, spawn));
+
+        history.Add(new Move(oldX, oldY, x, y, spawn));
+
+        E_Sound moveSound = spawn == E_PieceType.None ? E_Sound.PieceMove : E_Sound.PieceMoveWithSpawn;
+        AudioInterface.play(moveSound);
     }
 
     #region GridInterface
@@ -173,6 +177,8 @@ public class Board : MonoBehaviour
         Piece p = s.getOccupant();
         if (!p)
             return false;
+        if (type == E_PieceType.None)
+            return p.getTeam() == team;
         return p.getTeam() == team && p.getType() == type;
     }
 

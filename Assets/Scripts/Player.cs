@@ -16,6 +16,10 @@ public class Player : MonoBehaviour
     {
         return (E_Team)(((int)player + 1) % 2);
     }
+    public static E_Team otherPlayer()
+    {
+        return (E_Team)(((int)_i.currentPlayer + 1) % 2);
+    }
 
     private void Awake()
     {
