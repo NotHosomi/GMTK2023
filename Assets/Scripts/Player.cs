@@ -31,6 +31,12 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        if(Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Log("Audio test");
+            AudioInterface.play(E_Sound.Win);
+        }
+
         if (Input.GetMouseButtonDown(1) && currentPlayer == E_Team.White)
         {
             selectPiece(null);
@@ -101,12 +107,11 @@ public class Player : MonoBehaviour
         endTurn();
         if (Board._i.checkWin())
         {
-            // Winscreen
-            AudioInterface.play(E_Sound.Win);
+            onWin();
         }
         else if(Board._i.checkLoss())
         {
-            AudioInterface.play(E_Sound.Loss);
+            onLoss();
         }
         else
         {
@@ -151,5 +156,17 @@ public class Player : MonoBehaviour
         selectPiece(null);
         currentPlayer = otherPlayer(currentPlayer);
         selection_highlight.SetActive(false);
+    }
+
+    public void onWin()
+    {
+        // Winscreen
+        AudioInterface.play(E_Sound.Win);
+    }
+
+    public void onLoss()
+    {
+
+        AudioInterface.play(E_Sound.Loss);
     }
 }
