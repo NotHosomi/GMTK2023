@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using UnityEngine.Audio;
 using UnityEngine;
 
 public enum E_Sound
@@ -17,12 +19,24 @@ public enum E_Sound
 
 public class AudioInterface : MonoBehaviour
 {
+    public Sound[] = sounds;
+
     static AudioInterface _i;
     private void Awake()
     {
         if(_i != null)
             Destroy(_i.gameObject);
         _i = this;
+
+        foreach(E_Sound s in sounds)
+        {
+            s.source = gameObject.AddComponent<AudioSource>();
+            s.source.clip = s.clip;
+
+            s.source.volume = s.volume;
+            s.source.pitch = s.pitch;
+        }
+
     }
 
     public static void play(E_Sound sound)
@@ -63,7 +77,7 @@ public class AudioInterface : MonoBehaviour
 
     void playPieceHover()
     {
-
+        .source.Play();
     }
 
     void playPieceSelect()
