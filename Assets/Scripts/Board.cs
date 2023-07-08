@@ -2,6 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum E_FailState
+{
+    None,
+    NoValidMoves,
+    PawnTrapped,
+    PawnTrappedNoDiag,
+    BishopLockout,
+    BishopLockin,
+    PawnWall,
+}
+
 public class Board : MonoBehaviour
 {
     struct Move
@@ -24,6 +35,7 @@ public class Board : MonoBehaviour
     [SerializeField] GameObject piecePrefab;
     [SerializeField] GameObject moveIndicatorPrefab;
     [SerializeField] Sprite[] pieceSprites;
+    [SerializeField] WarningHover failNotif;
     List<Square> slots;
     List<Move> history;
 
@@ -133,30 +145,37 @@ public class Board : MonoBehaviour
 
     public bool checkWin()
     {
-        for (int i = 0; i < 8 * 2; ++i)
+        for (int i = 8; i < 16; ++i)
         {
-            Piece p = slots[i].getOccupant();
-            if (!p)
-                return false;
-            if (p.getTeam() != E_Team.White)
+            if (!testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
                 return false;
         }
         return true;
     }
 
-    public bool checkLoss()
+    public E_FailState checkFail(ref List<Vector2> indicators)
     {
-        // check if they've pawn blocked themselves
-        bool pawnBlockFlag = false;
         // check bishop entry
         if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
         {
             if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
-                pawnBlockFlag = true;
-
+            {
+                indicators.Add(new Vector2(2, 0));
+                return E_FailState.BishopLockout;
+            }
         }
-        // check rook entry
-        for(int i = 8; i < 16; ++i)
+        if (!testSquareOccupant(5, 0, E_Team.White, E_PieceType.Bish))
+        {
+            if (testSquareOccupant(4, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(6, 1, E_Team.White, E_PieceType.Pawn))
+            {
+                indicators.Add(new Vector2(5, 0));
+                return E_FailState.BishopLockout;
+            }
+        }
+
+        // check if they've pawn blocked themselves
+        bool pawnBlockFlag = false;
+        for (int i = 8; i < 16; ++i)
         {
             if (testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
             {
@@ -164,8 +183,16 @@ public class Board : MonoBehaviour
                 break;
             }
         }
+        if(pawnBlockFlag)
+        {
+            for(int i = 0; i<8; ++ i)
+            {
 
-        return pawnBlockFlag;
+            }
+            return E_FailState.PawnWall;
+        }
+
+        return E_FailState.None;
     }
 
     // returns true if there is a piece at the coords that matches the conditions

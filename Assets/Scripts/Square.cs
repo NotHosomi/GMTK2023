@@ -16,10 +16,16 @@ public class Square
     int m_y;
     Piece m_occupant = null;
     GameObject highlight = null;
+    GameObject failhighlight = null;
     static GameObject highlight_prefab;
+    static GameObject failhighlight_prefab;
     public static void assignHighlightPrefab(GameObject prefab)
     {
         highlight_prefab = prefab;
+    }
+    public static void assignFailHighlightPrefab(GameObject prefab)
+    {
+        failhighlight_prefab = prefab;
     }
 
     public Square(int x, int y)
@@ -27,6 +33,7 @@ public class Square
         m_x = x;
         m_y = y;
         highlight = GameObject.Instantiate(highlight_prefab, new Vector3(x, y, 2), Quaternion.identity);
+        failhighlight = GameObject.Instantiate(failhighlight_prefab, new Vector3(x, y, 2), Quaternion.identity);
     }
 
     public void occupy(Piece piece)
