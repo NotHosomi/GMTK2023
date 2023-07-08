@@ -21,7 +21,7 @@ public enum E_Team : int
 public struct T_Team
 {
     public int nPawnCandidates;
-    public int[] nTypes;
+    public int[] aTypes;
     public int nPieces;
     public bool bWhiteBishop;
     public bool bBlackBishop;
@@ -30,7 +30,7 @@ public struct T_Team
     public T_Team(bool doesNothing=false)
     {
         nPawnCandidates = 0;
-        nTypes = new int[] { 0, 0, 0, 0, 0, 0 };
+        aTypes = new int[] { 0, 0, 0, 0, 0, 0 };
         nPieces = 0;
         bWhiteBishop = false;
         bBlackBishop = false;
@@ -50,6 +50,13 @@ public class Piece : MonoBehaviour
     public E_Team getTeam() { return m_team; }
     private E_PieceType m_type;
     public E_PieceType getType() { return m_type; }
+    Square currentSquare = null;
+    static Sprite[] zSprites;
+
+    public static void mountTextures(Sprite[] _sprites)
+    {
+        zSprites = _sprites;
+    }
 
     public void init(int x, int y, E_PieceType type, E_Team team)
     {
@@ -61,25 +68,53 @@ public class Piece : MonoBehaviour
         int i = (int)team;
         int j = (int)type;
         ++(s_tPieces[i].nPieces);
-        ++(s_tPieces[i].nTypes[j]);
+        ++(s_tPieces[i].aTypes[j]);
+        s_tPieces[i].vPieces.Add(this);
+        reloadSprite();
+        currentSquare = Board._i.getSquare(x, y);
     }
     ~Piece()
     {
     }
-
-    public void move(int x, int y)
+    void reloadSprite()
     {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        sr.sprite = zSprites[(int)m_team * 6 + (int)m_type];
+    }
+
+    public E_PieceType move(int x, int y)
+    {
+        // demote check
         int endzone = m_team == E_Team.Black ? 0 : 7;
-        if(y == endzone && m_type != E_PieceType.Pawn)
+        if(y == endzone && m_type != E_PieceType.Pawn && m_type != E_PieceType.King && validatePawn(m_team) &&
+            s_tPieces[(int)m_team].aTypes[(int)m_type] > zTypeTargets[(int)m_type])
         {
-            bool canDemote = 
-        }
-        if()
-        {
-            m_type = E_PieceType.Pawn;
-            // TODO: change sprite
+            demote();
         }
 
+        // switch tile
+        currentSquare.deoccupy();
+        E_PieceType spawn = currentSquare.rollSpawn(m_team);
+        currentSquare = Board._i.getSquare(x, y);
+        currentSquare.occupy(this);
+
+        // move gameobject
+        Vector3 pos = transform.position;
+        pos.x = x;
+        pos.y = y;
+        transform.position = pos;
+        return spawn;
+    }
+    void demote()
+    {
+        // TODO: implement value decrementers
+        --s_tPieces[(int)m_team].nPawnCandidates;
+        --s_tPieces[(int)m_team].aTypes[(int)m_type];
+
+        m_type = E_PieceType.Pawn;
+        ++s_tPieces[(int)m_team].aTypes[(int)m_type];
+
+        reloadSprite();
     }
 
     public List<Vector2> getMoveset(int srcX = -1, int srcY = -1)
@@ -170,14 +205,15 @@ public class Piece : MonoBehaviour
         List<Vector2> moves = new List<Vector2>();
         for (int y = -1; y <= 1; ++y)
             for (int x = -1; x <= 1; ++x)
-                moves.Add(new Vector2(x, y));
+                moves.Add(new Vector2(srcX+x, srcY+y));
         return moves;
     }
     void AddIfNotBlocked(ref List<Vector2> moves, ref bool blocked, int x, int y)
     {
         if (blocked)
             return;
-        if (Board._i.getSquare(x, y).getOccupant() != null)
+        Square s = Board._i.getSquare(x, y);
+        if (s != null && s.getOccupant() != null)
         {
             blocked = true;
             return;
@@ -200,7 +236,7 @@ public class Piece : MonoBehaviour
         }
         return
             Piece.s_tPieces[(int)team].nPawnCandidates +                // pawns to be
-            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn] +  // existing pawns
+            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +  // existing pawns
             nColouredBishop                                             // the existing bishop of this colour
             <
             Piece.zTypeTargets[(int)E_PieceType.Pawn] +     // 8 pawns
@@ -212,7 +248,7 @@ public class Piece : MonoBehaviour
     {
         return
             Piece.s_tPieces[(int)team].nPawnCandidates +
-            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn]
+            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn]
             <
             Piece.zTypeTargets[(int)E_PieceType.Pawn];    // 8 pawns
     }
@@ -221,8 +257,8 @@ public class Piece : MonoBehaviour
     {
         return
             Piece.s_tPieces[(int)team].nPawnCandidates +
-            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn] +
-            Piece.s_tPieces[(int)team].nTypes[(int)type]
+            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +
+            Piece.s_tPieces[(int)team].aTypes[(int)type]
             <
             Piece.zTypeTargets[(int)E_PieceType.Pawn] + // 8 pawns + 2 of this type
             Piece.zTypeTargets[(int)type];

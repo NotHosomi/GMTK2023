@@ -10,16 +10,20 @@ public class Board : MonoBehaviour
         public int srcY;
         public int destX;
         public int destY;
-        public Move(int oldX, int oldY, int newX, int newY)
+        public E_PieceType spawned;
+        public Move(int oldX, int oldY, int newX, int newY, E_PieceType _spawned)
         {
             srcX = oldX;
             srcY = oldY;
             destX = newX;
             destY = newY;
+            spawned = _spawned;
         }
     }
     public static Board _i;
-    [SerializeField] GameObject prefab;
+    [SerializeField] GameObject piecePrefab;
+    [SerializeField] GameObject moveIndicatorPrefab;
+    [SerializeField] Sprite[] pieceSprites;
     List<Square> slots;
     List<Move> history;
 
@@ -35,7 +39,10 @@ public class Board : MonoBehaviour
 
     void init()
     {
+        Piece.mountTextures(pieceSprites);
+        Square.assignHighlightPrefab(moveIndicatorPrefab);
         slots = new List<Square>();
+        history = new List<Move>();
         for (int y = 0; y < 8; ++y)
         {
             for (int x = 0; x < 8; ++x)
@@ -48,7 +55,7 @@ public class Board : MonoBehaviour
 
     public void createPiece(int x, int y, E_PieceType type, E_Team team)
     {
-        GameObject obj = Instantiate(prefab, new Vector3(x, y, 0), Quaternion.identity);
+        GameObject obj = Instantiate(piecePrefab, new Vector3(x, y, 0), Quaternion.identity);
         Piece piece = obj.GetComponent<Piece>();
         piece.init(x, y, type, team);
 
@@ -61,6 +68,8 @@ public class Board : MonoBehaviour
         int oldX = (int)piece.getPos().x;
         int oldY = (int)piece.getPos().y;
 
+        // TODO: if the move matches next in the move list, then its just a redo
+
         E_SpawnCmd pawn_flag = E_SpawnCmd.chance;
         if (piece.getType() == E_PieceType.Pawn)
         {
@@ -69,8 +78,8 @@ public class Board : MonoBehaviour
             else
                 pawn_flag = E_SpawnCmd.cannot;
         }
-        Board._i.getSquare(oldX, oldY).deoccupy(pawn_flag);
-        history.Add(new Move( oldX, oldY, x, y));
+        E_PieceType spawn = piece.move(x, y);
+        history.Add(new Move( oldX, oldY, x, y, spawn));
     }
 
     #region GridInterface
@@ -113,7 +122,17 @@ public class Board : MonoBehaviour
 
     public void drawMoveset(List<Vector2> moveset)
     {
-        // TODO
+        foreach (Vector2 pos in moveset)
+        {
+            getSquare(pos).setMoveSelector(true);
+        }
+    }
+    public void hideMoveset()
+    {
+        foreach (Square s in slots)
+        {
+            s.setMoveSelector(false);
+        }
     }
 
     public bool checkWin()
@@ -156,7 +175,10 @@ public class Board : MonoBehaviour
     // returns true if there is a piece at the coords that matches the conditions
     public bool testSquareOccupant(int x, int y, E_Team team, E_PieceType type)
     {
-        Piece p = getSquare(x, y).getOccupant();
+        Square s = getSquare(x, y);
+        if (s == null)
+            return false;
+        Piece p = s.getOccupant();
         if (!p)
             return false;
         return p.getTeam() == team && p.getType() == type;
@@ -199,7 +221,8 @@ public class Board : MonoBehaviour
             bool checkFlag = false;
             foreach (Vector2 dest in destMoveset)
             {
-                if(testSquareOccupant((int)dest.x, (int)dest.y, enemy, E_PieceType.King));
+                // if there is a black king in the would-be moveset
+                if(testSquareOccupant((int)dest.x, (int)dest.y, enemy, E_PieceType.King))
                 {
                     // check
                     moveset.RemoveAt(i);
@@ -209,6 +232,17 @@ public class Board : MonoBehaviour
             }
             if (checkFlag)
                 continue;
+            ++i;
         }
+    }
+
+    public void redo()
+    {
+
+    }
+
+    public void undo()
+    {
+
     }
 }
