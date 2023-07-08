@@ -17,7 +17,7 @@ public enum E_Sound
 
 public class AudioInterface : MonoBehaviour
 {
-    AudioInterface _i;
+    static AudioInterface _i;
     private void Awake()
     {
         if(_i != null)
@@ -25,36 +25,36 @@ public class AudioInterface : MonoBehaviour
         _i = this;
     }
 
-    public void play(E_Sound sound)
+    public static void play(E_Sound sound)
     {
         switch(sound)
         {
             case E_Sound.PieceHover:
-                playPieceHover();
+                _i.playPieceHover();
                 break;
             case E_Sound.PieceSelect:
-                playPieceSelect()
-;                break;
+                _i.playPieceSelect()
+;               break;
             case E_Sound.PieceMove:
-                playPieceMove();
+                _i.playPieceMove();
                 break;
             case E_Sound.PieceMoveWithSpawn:
-                playPieceWithSpawn();
+                _i.playPieceWithSpawn();
                 break;
             case E_Sound.PieceDemote:
-                playPieceDemote();
+                _i.playPieceDemote();
                 break;
             case E_Sound.Win:
-                playWin();
+                _i.playWin();
                 break;
             case E_Sound.Loss:
-                playLoss();
+                _i.playLoss();
                 break;
             case E_Sound.ButtonClick:
-                playButtonClick();
+                _i.playButtonClick();
                 break;
             case E_Sound.ButtonHover:
-                playButtonHover();
+                _i.playButtonHover();
                 break;
             default:
                 break;
