@@ -19,7 +19,7 @@ public enum E_Sound
 
 public class AudioInterface : MonoBehaviour
 {
-    public Sound[] = sounds;
+    [SerializeField] public Sound[] sounds;
 
     static AudioInterface _i;
     private void Awake()
@@ -28,7 +28,7 @@ public class AudioInterface : MonoBehaviour
             Destroy(_i.gameObject);
         _i = this;
 
-        foreach(E_Sound s in sounds)
+       foreach(Sound s in sounds)
         {
             s.source = gameObject.AddComponent<AudioSource>();
             s.source.clip = s.clip;
@@ -36,12 +36,11 @@ public class AudioInterface : MonoBehaviour
             s.source.volume = s.volume;
             s.source.pitch = s.pitch;
         }
-
     }
 
-    public static void play(E_Sound sound)
+    public static void play(E_Sound soundId)
     {
-        switch(sound)
+        switch(soundId)
         {
             case E_Sound.PieceHover:
                 _i.playPieceHover();
@@ -75,19 +74,26 @@ public class AudioInterface : MonoBehaviour
         }
     }
 
+
     void playPieceHover()
     {
-        .source.Play();
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = Array.Find(sounds, sounds => sounds.name == "hover").clip;
+        asource.Play();
     }
 
     void playPieceSelect()
     {
-
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = Array.Find(sounds, sounds => sounds.name == "select").clip;
+        asource.Play();
     }
 
     void playPieceMove()
     {
-
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = sounds[UnityEngine.Random.Range(1, 6)].clip;
+        asource.Play();
     }
 
     void playPieceWithSpawn()
@@ -102,17 +108,23 @@ public class AudioInterface : MonoBehaviour
 
     void playWin()
     {
-
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = Array.Find(sounds, sounds => sounds.name == "win").clip;
+        asource.Play(); 
     }
 
     void playLoss()
     {
-
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = Array.Find(sounds, sounds => sounds.name == "invalid_action").clip;
+        asource.Play();
     }
 
     void playButtonClick()
     {
-
+        AudioSource asource = gameObject.GetComponent<AudioSource>();
+        asource.clip = Array.Find(sounds, sounds => sounds.name == "button_down").clip;
+        asource.Play();
     }
 
     void playButtonHover()
