@@ -21,7 +21,7 @@ public class WarningHover : MonoBehaviour
         }
     }
 
-    void OnMouseOver()
+    private void OnMouseEnter()
     {
         WarningBox.SetActive(true);
     }

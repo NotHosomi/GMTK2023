@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     int turns = 0;
     Piece selected = null;
     [SerializeField] GameObject selection_highlight;
+    [SerializeField] GameObject failNotif;
     List<Vector2> currentMoveset;
     E_Team currentPlayer = E_Team.White;
 
@@ -94,7 +95,7 @@ public class Player : MonoBehaviour
         {
             // get the moveset
             currentMoveset = selected.getMoveset();
-            Board._i.filterMoveset(ref currentMoveset, currentPlayer, selected);
+            Board._i.filterMoveset(ref currentMoveset, selected);
 
             // move the selection cursor
             selection_highlight.SetActive(true);
@@ -172,7 +173,6 @@ public class Player : MonoBehaviour
         AudioInterface.play(E_Sound.Win);
     }
 
-    [SerializeField] WarningHover failNotif;
     public void onLoss(E_FailState failtype, List<Vector2> failIndicators)
     {
         string failmessage = "";
@@ -205,12 +205,21 @@ public class Player : MonoBehaviour
                     "\nstalemate";
                 break;
         }
-        failNotif.SetWarning(true, failmessage);
+        failNotif.SetActive(true);
+        failNotif.GetComponent<WarningHover>().SetWarning(true, failmessage);
         AudioInterface.play(E_Sound.Loss);
+    }
+
+    //button events
+    public void Quit()
+    {
+        Debug.Log("Quit");
+        Application.Quit();
     }
 
     public void ReloadScene()
     {
+        Debug.Log("Restart");
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

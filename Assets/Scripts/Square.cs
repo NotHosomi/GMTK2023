@@ -34,6 +34,7 @@ public class Square
         m_y = y;
         highlight = GameObject.Instantiate(highlight_prefab, new Vector3(x, y, 2), Quaternion.identity);
         failhighlight = GameObject.Instantiate(failhighlight_prefab, new Vector3(x, y, 2), Quaternion.identity);
+        failhighlight.SetActive(false);
     }
 
     public void occupy(Piece piece)

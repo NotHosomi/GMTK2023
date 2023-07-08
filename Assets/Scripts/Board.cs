@@ -34,6 +34,7 @@ public class Board : MonoBehaviour
     public static Board _i;
     [SerializeField] GameObject piecePrefab;
     [SerializeField] GameObject moveIndicatorPrefab;
+    [SerializeField] GameObject failIndicatorPrefab;
     [SerializeField] Sprite[] pieceSprites;
     [SerializeField] WarningHover failNotif;
     List<Square> slots;
@@ -53,6 +54,7 @@ public class Board : MonoBehaviour
     {
         Piece.mountTextures(pieceSprites);
         Square.assignHighlightPrefab(moveIndicatorPrefab);
+        Square.assignFailHighlightPrefab(failIndicatorPrefab);
         slots = new List<Square>();
         history = new List<Move>();
         for (int y = 0; y < 8; ++y)
@@ -221,7 +223,7 @@ public class Board : MonoBehaviour
         createPiece(0, 4, E_PieceType.Pawn, E_Team.White);
     }
 
-    public void filterMoveset(ref List<Vector2> moveset, E_Team currentPlayer, Piece piece)
+    public void filterMoveset(ref List<Vector2> moveset, Piece piece)
     {
         int i = 0;
         while(i < moveset.Count)
@@ -243,11 +245,11 @@ public class Board : MonoBehaviour
             }
             // can't put enemy king in check
             List<Vector2> destMoveset = piece.getMoveset(newX, newY);
-            E_Team enemy = Player.otherPlayer(currentPlayer);
+            E_Team enemy = Player.otherPlayer();
             bool checkFlag = false;
             foreach (Vector2 dest in destMoveset)
             {
-                // if there is a black king in the would-be moveset
+                // if there is an enemy king in the would-be moveset
                 if(testSquareOccupant((int)dest.x, (int)dest.y, enemy, E_PieceType.King))
                 {
                     // check
