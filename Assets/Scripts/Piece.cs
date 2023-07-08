@@ -148,7 +148,7 @@ public class Piece : MonoBehaviour
 
         bool isBlack = m_team == E_Team.Black;
         int newY = srcY + (isBlack ? 1 : -1);
-        if (newY > 6 || newY >= 1) // can't move onto row 0 or row 7
+        if (newY > 6 || newY < 1) // can't move onto row 0 or row 7
             return moves;
         moves.Add(new Vector2(m_x, newY));
 
