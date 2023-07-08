@@ -152,7 +152,7 @@ public class Piece : MonoBehaviour
             return moves;
         moves.Add(new Vector2(m_x, newY));
 
-        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) == 16;
+        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) < 16;
         if(canDiagonal)
         {
             moves.Add(new Vector2(srcX + 1, newY));
