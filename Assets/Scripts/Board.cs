@@ -129,6 +129,39 @@ public class Board : MonoBehaviour
         return true;
     }
 
+    public bool checkLoss()
+    {
+        // check if they've pawn blocked themselves
+        bool pawnBlockFlag = false;
+        // check bishop entry
+        if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
+        {
+            if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
+                pawnBlockFlag = true;
+
+        }
+        // check rook entry
+        for(int i = 8; i < 16; ++i)
+        {
+            if (testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
+            {
+                pawnBlockFlag = true;
+                break;
+            }
+        }
+
+        return pawnBlockFlag;
+    }
+
+    // returns true if there is a piece at the coords that matches the conditions
+    public bool testSquareOccupant(int x, int y, E_Team team, E_PieceType type)
+    {
+        Piece p = getSquare(x, y).getOccupant();
+        if (!p)
+            return false;
+        return p.getTeam() == team && p.getType() == type;
+    }
+
     public void buildStartState()
     {
         createPiece(7, 7, E_PieceType.King, E_Team.Black);
@@ -138,5 +171,44 @@ public class Board : MonoBehaviour
         createPiece(7, 1, E_PieceType.Rook, E_Team.White);
         createPiece(7, 1, E_PieceType.Rook, E_Team.White);
         createPiece(3, 4, E_PieceType.Bish, E_Team.White);
+    }
+
+    public void filterMoveset(ref List<Vector2> moveset, E_Team currentPlayer, Piece piece)
+    {
+        int i = 0;
+        while(i < moveset.Count)
+        {
+            int newX = (int)moveset[i].x;
+            int newY = (int)moveset[i].y;
+            // can't move off the board
+            if (newX < 0 || newY < 0 || newX >= 8 || newY >= 8)
+            {
+                moveset.RemoveAt(i);
+                continue;
+            }
+            // can't move to occupied squares
+            Piece occupant = getSquare(newX, newY).getOccupant();
+            if (occupant != null)
+            {
+                moveset.RemoveAt(i);
+                continue;
+            }
+            // can't put enemy king in check
+            List<Vector2> destMoveset = piece.getMoveset(newX, newY);
+            E_Team enemy = Player.otherPlayer(currentPlayer);
+            bool checkFlag = false;
+            foreach (Vector2 dest in destMoveset)
+            {
+                if(testSquareOccupant((int)dest.x, (int)dest.y, enemy, E_PieceType.King));
+                {
+                    // check
+                    moveset.RemoveAt(i);
+                    checkFlag = true;
+                    break;
+                }
+            }
+            if (checkFlag)
+                continue;
+        }
     }
 }

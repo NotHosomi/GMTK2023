@@ -24,34 +24,6 @@ public class Square
         // TODO grab highlight object
     }
 
-    public void deoccupy(E_SpawnCmd pawn_flag = E_SpawnCmd.chance)
-    {
-        switch (pawn_flag)
-        {
-            case E_SpawnCmd.cannot:
-                m_occupant = null;
-                break;
-            case E_SpawnCmd.must:
-                spawn();
-                break;
-            case E_SpawnCmd.chance:
-                bool proc = Random.Range(0, 9) == 0;
-                if (proc)
-                    spawn();
-                else
-                    m_occupant = null;
-                break;
-        }
-    }
-
-    void spawn()
-    {
-        // TODO: this needs more validation
-        E_PieceType type = (E_PieceType)Random.Range(0, 4);
-        E_Team team = m_occupant.getTeam() == E_Team.Black ? E_Team.White : E_Team.Black;
-        Board._i.createPiece(m_x, m_y, type, team);
-    }
-
     public void occupy(Piece piece)
     {
         m_occupant = piece;
@@ -59,5 +31,49 @@ public class Square
     public Piece getOccupant()
     {
         return m_occupant;
+    }
+
+    public void deoccupy(E_SpawnCmd spawn_flag = E_SpawnCmd.chance)
+    {
+        switch (spawn_flag)
+        {
+            case E_SpawnCmd.cannot:
+                m_occupant = null;
+                break;
+            case E_SpawnCmd.must:
+                uncapture();
+                break;
+            case E_SpawnCmd.chance:
+                bool proc = Random.Range(0, 9) == 0;
+                if (proc)
+                    uncapture();
+                else
+                    m_occupant = null;
+                break;
+        }
+    }
+
+    void uncapture()
+    {
+        // TODO: this needs more validation
+        E_PieceType type = (E_PieceType)Random.Range(0, 4);
+        E_Team team = m_occupant.getTeam() == E_Team.Black ? E_Team.White : E_Team.Black;
+        bool valid;
+        switch (type)
+        {
+            case E_PieceType.Pawn:
+                valid = Piece.validatePawn(team);
+                break;
+            case E_PieceType.Bish:
+                valid = Piece.validateBishop(team, m_x, m_y);
+                break;
+            default:
+                valid = Piece.validateOther(type, team);
+                break;
+        }
+        if (!valid)
+            return;
+
+        Board._i.createPiece(m_x, m_y, type, team);
     }
 }
