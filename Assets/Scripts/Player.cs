@@ -79,11 +79,11 @@ public class Player : MonoBehaviour
     void selectPiece(Piece piece)
     {
         selected = piece;
+        Board._i.hideMoveset();
         if (selected == null)
         {
             currentMoveset = new List<Vector2>();
             selection_highlight.SetActive(false);
-            Board._i.hideMoveset();
         }
         else
         {
@@ -116,7 +116,7 @@ public class Player : MonoBehaviour
         else
         {
             // AI turn
-            //StartCoroutine(aiTurn());
+            StartCoroutine(aiTurn());
         }
     }
 
@@ -137,10 +137,11 @@ public class Player : MonoBehaviour
                 endTurn();
                 yield break;
             }
-            index = (index + 1 % pieces.Count);
+            index = ((index + 1) % pieces.Count);
 
             Debug.Log("selecting index " + index);
             selectPiece(pieces[index]);
+            yield return new WaitForSeconds(.25f);
         }
         yield return new WaitForSeconds(.25f);
         index = Random.Range(0, currentMoveset.Count-1);

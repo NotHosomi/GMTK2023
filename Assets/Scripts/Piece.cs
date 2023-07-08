@@ -91,17 +91,25 @@ public class Piece : MonoBehaviour
         {
             demote();
         }
-
+        
+        E_SpawnCmd pawn_flag = E_SpawnCmd.chance;
+        if (m_type == E_PieceType.Pawn)
+        {
+            if (x != m_x)
+                pawn_flag = E_SpawnCmd.must;
+            else
+                pawn_flag = E_SpawnCmd.cannot;
+        }
         // switch tile
         currentSquare.deoccupy();
-        E_PieceType spawn = currentSquare.rollSpawn(m_team);
+        E_PieceType spawn = currentSquare.rollSpawn(m_team, pawn_flag);
         currentSquare = Board._i.getSquare(x, y);
         currentSquare.occupy(this);
 
         // move gameobject
         Vector3 pos = transform.position;
-        pos.x = x;
-        pos.y = y;
+        pos.x = m_x = x;
+        pos.y = m_y = y;
         transform.position = pos;
         return spawn;
     }
