@@ -12,19 +12,37 @@ public enum E_PieceType
     King,
     None
 }
-public enum E_Team
+public enum E_Team : int
 {
     Black,
     White
 }
 
+public struct T_Team
+{
+    public int nPawnCandidates;
+    public int[] nTypes;
+    public int nPieces;
+    public bool bWhiteBishop;
+    public bool bBlackBishop;
+    public List<Piece> vPieces;
+
+    public T_Team(bool doesNothing=false)
+    {
+        nPawnCandidates = 0;
+        nTypes = new int[] { 0, 0, 0, 0, 0, 0 };
+        nPieces = 0;
+        bWhiteBishop = false;
+        bBlackBishop = false;
+        vPieces = new List<Piece>();
+    }
+
+}
 
 public class Piece : MonoBehaviour
 {
-    public static int[] s_nPawns = { 0, 0 };
-    public static int[] s_nPieces = { 0, 0 };
-    public static bool[] s_bWhiteBishop = {false, false};
-    public static bool[] s_bBlackBishop = { false, false };
+    public static int[] zTypeTargets = { 8, 2, 2, 2, 1, 1 };
+    public static T_Team[] s_tPieces = { new T_Team(false), new T_Team(false)};
     int m_x;
     int m_y;
     public Vector2 getPos() { return new Vector2(m_x, m_y); }
@@ -41,21 +59,22 @@ public class Piece : MonoBehaviour
         m_type = type;
 
         int i = (int)team;
-        ++s_nPieces[i];
-        // pawn spawning
-        if (type == E_PieceType.Pawn)
-            ++s_nPawns[i];
-        // bishop spawning
-        if (type == E_PieceType.Bish && Board._i.isWhiteSquare(x, y))
-        {
-
-        }
+        int j = (int)type;
+        ++(s_tPieces[i].nPieces);
+        ++(s_tPieces[i].nTypes[j]);
+    }
+    ~Piece()
+    {
     }
 
     public void move(int x, int y)
     {
-        int nPawn = s_nPawns[(int)m_team];
-        if(m_type != E_PieceType.Pawn)
+        int endzone = m_team == E_Team.Black ? 0 : 7;
+        if(y == endzone && m_type != E_PieceType.Pawn)
+        {
+            bool canDemote = 
+        }
+        if()
         {
             m_type = E_PieceType.Pawn;
             // TODO: change sprite
@@ -63,86 +82,90 @@ public class Piece : MonoBehaviour
 
     }
 
-    public List<Vector2> getMoveset()
+    public List<Vector2> getMoveset(int srcX = -1, int srcY = -1)
     {
-        switch(m_type)
+        if (srcX == -1)
+            srcX = m_x;
+        if (srcY == -1)
+            srcY = m_y;
+        switch (m_type)
         {
-            case E_PieceType.Pawn:  return getPawnMoveset();
-            case E_PieceType.Rook:  return getRookMoveset();
-            case E_PieceType.Hors: return getHorseMoveset();
-            case E_PieceType.Bish:return getBishopMoveset();
-            case E_PieceType.Quee: return getQueenMoveset();
-            case E_PieceType.King:  return getKingMoveset();
+            case E_PieceType.Pawn:  return getPawnMoveset(srcX, srcY);
+            case E_PieceType.Rook:  return getRookMoveset(srcX, srcY);
+            case E_PieceType.Hors: return getHorseMoveset(srcX, srcY);
+            case E_PieceType.Bish:return getBishopMoveset(srcX, srcY);
+            case E_PieceType.Quee: return getQueenMoveset(srcX, srcY);
+            case E_PieceType.King:  return getKingMoveset(srcX, srcY);
             default:                return new List<Vector2>();
         }
     }
-    List<Vector2> getPawnMoveset()
+    List<Vector2> getPawnMoveset(int srcX, int srcY)
     {
         List<Vector2> moves = new List<Vector2>();
 
         bool isBlack = m_team == E_Team.Black;
-        int newY = m_y + (isBlack ? 1 : -1);
+        int newY = srcY + (isBlack ? 1 : -1);
         if (newY > 6 || newY >= 1) // can't move onto row 0 or row 7
             return moves;
         moves.Add(new Vector2(m_x, newY));
 
-        bool canDiagonal = (isBlack ? s_nWhitePieces : s_nBlackPieces) == 16;
+        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) == 16;
         if(canDiagonal)
         {
-            moves.Add(new Vector2(m_x + 1, newY));
-            moves.Add(new Vector2(m_x - 1, newY));
+            moves.Add(new Vector2(srcX + 1, newY));
+            moves.Add(new Vector2(srcX - 1, newY));
         }
 
         return moves;
     }
-    List<Vector2> getRookMoveset()
+    List<Vector2> getRookMoveset(int srcX, int srcY)
     {
         List<Vector2> moves = new List<Vector2>();
         bool[] blocked = { false, false, false, false};
         for (int d = 1; d <= 7; ++d)
         {
-            AddIfNotBlocked(ref moves, ref blocked[0], m_x + d, m_y);
-            AddIfNotBlocked(ref moves, ref blocked[1], m_x - d, m_y);
-            AddIfNotBlocked(ref moves, ref blocked[2], m_x,     m_y + d);
-            AddIfNotBlocked(ref moves, ref blocked[3], m_x,     m_y - d);
+            AddIfNotBlocked(ref moves, ref blocked[0], srcX + d, srcY);
+            AddIfNotBlocked(ref moves, ref blocked[1], srcX - d, srcY);
+            AddIfNotBlocked(ref moves, ref blocked[2], srcX,     srcY + d);
+            AddIfNotBlocked(ref moves, ref blocked[3], srcX,     srcY - d);
         }
         return moves;
     }
-    List<Vector2> getHorseMoveset()
+    List<Vector2> getHorseMoveset(int srcX, int srcY)
     {
         List<Vector2> moves = new List<Vector2>();
-        moves.Add(new Vector2(m_x + 2, m_y + 1));
-        moves.Add(new Vector2(m_x + 2, m_y - 1));
-        moves.Add(new Vector2(m_x - 2, m_y + 1));
-        moves.Add(new Vector2(m_x - 2, m_y - 1));
+        moves.Add(new Vector2(srcX + 2, srcY + 1));
+        moves.Add(new Vector2(srcX + 2, srcY - 1));
+        moves.Add(new Vector2(srcX - 2, srcY + 1));
+        moves.Add(new Vector2(srcX - 2, srcY - 1));
 
-        moves.Add(new Vector2(m_x + 1, m_y + 2));
-        moves.Add(new Vector2(m_x + 1, m_y - 2));
-        moves.Add(new Vector2(m_x - 1, m_y + 2));
-        moves.Add(new Vector2(m_x - 1, m_y - 2));
+        moves.Add(new Vector2(srcX + 1, srcY + 2));
+        moves.Add(new Vector2(srcX + 1, srcY - 2));
+        moves.Add(new Vector2(srcX - 1, srcY + 2));
+        moves.Add(new Vector2(srcX - 1, srcY - 2));
 
         return moves;
     }
-    List<Vector2> getBishopMoveset()
+    List<Vector2> getBishopMoveset(int srcX, int srcY)
     {
         List<Vector2> moves = new List<Vector2>();
         bool[] blocked = { false, false, false, false };
         for (int y = 1; y <= 7; ++y)
         {
-            AddIfNotBlocked(ref moves, ref blocked[0], m_x - y, m_y + y);
-            AddIfNotBlocked(ref moves, ref blocked[1], m_x + y, m_y + y);
-            AddIfNotBlocked(ref moves, ref blocked[2], m_x - y, m_y - y);
-            AddIfNotBlocked(ref moves, ref blocked[3], m_x + y, m_y - y);
+            AddIfNotBlocked(ref moves, ref blocked[0], srcX - y, srcY + y);
+            AddIfNotBlocked(ref moves, ref blocked[1], srcX + y, srcY + y);
+            AddIfNotBlocked(ref moves, ref blocked[2], srcX - y, srcY - y);
+            AddIfNotBlocked(ref moves, ref blocked[3], srcX + y, srcY - y);
         }
         return moves;
     }
-    List<Vector2> getQueenMoveset()
+    List<Vector2> getQueenMoveset(int srcX, int srcY)
     {
-        List<Vector2> moves = getBishopMoveset();
-        moves.AddRange(getRookMoveset());
+        List<Vector2> moves = getBishopMoveset(srcX, srcY);
+        moves.AddRange(getRookMoveset(srcX, srcY));
         return moves;
     }
-    List<Vector2> getKingMoveset()
+    List<Vector2> getKingMoveset(int srcX, int srcY)
     {
         List<Vector2> moves = new List<Vector2>();
         for (int y = -1; y <= 1; ++y)
@@ -160,5 +183,48 @@ public class Piece : MonoBehaviour
             return;
         }
         moves.Add(new Vector2(x, y));
+    }
+
+
+    // piece counting
+    public static bool validateBishop(E_Team team, int x, int y)
+    {
+        int nColouredBishop;
+        if (Board._i.isWhiteSquare(x, y))
+        {
+            nColouredBishop = Piece.s_tPieces[(int)team].bWhiteBishop ? 1 : 0;
+        }
+        else
+        {
+            nColouredBishop = Piece.s_tPieces[(int)team].bBlackBishop ? 1 : 0;
+        }
+        return
+            Piece.s_tPieces[(int)team].nPawnCandidates +                // pawns to be
+            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn] +  // existing pawns
+            nColouredBishop                                             // the existing bishop of this colour
+            <
+            Piece.zTypeTargets[(int)E_PieceType.Pawn] +     // 8 pawns
+            Piece.zTypeTargets[(int)E_PieceType.Bish] / 2;  // 1 of this coloured bishol
+    }
+
+    // Returns true if the sum of pawns or excess of other types is less than 8
+    public static bool validatePawn(E_Team team)
+    {
+        return
+            Piece.s_tPieces[(int)team].nPawnCandidates +
+            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn]
+            <
+            Piece.zTypeTargets[(int)E_PieceType.Pawn];    // 8 pawns
+    }
+
+    public static bool validateOther(E_PieceType type, E_Team team)
+    {
+        return
+            Piece.s_tPieces[(int)team].nPawnCandidates +
+            Piece.s_tPieces[(int)team].nTypes[(int)E_PieceType.Pawn] +
+            Piece.s_tPieces[(int)team].nTypes[(int)type]
+            <
+            Piece.zTypeTargets[(int)E_PieceType.Pawn] + // 8 pawns + 2 of this type
+            Piece.zTypeTargets[(int)type];
     }
 }
