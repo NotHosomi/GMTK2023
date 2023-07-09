@@ -11,7 +11,6 @@ public enum E_FailState
     BishopLockout,
     BishopLockin,
     BishopBlocker,
-    PawnWall,
 }
 
 public class Board : MonoBehaviour
@@ -37,7 +36,6 @@ public class Board : MonoBehaviour
     [SerializeField] GameObject moveIndicatorPrefab;
     [SerializeField] GameObject failIndicatorPrefab;
     [SerializeField] Sprite[] pieceSprites;
-    [SerializeField] WarningHover failNotif;
     List<Square> slots;
     List<Move> history;
 
@@ -65,7 +63,8 @@ public class Board : MonoBehaviour
                 slots.Add(new Square(x, y));
             }
         }
-        buildStartState();
+        buildStartState_TestVictory();
+        //buildStartState();
     }
 
     public void createPiece(int x, int y, E_PieceType type, E_Team team)
@@ -148,12 +147,24 @@ public class Board : MonoBehaviour
 
     public bool checkWin()
     {
-        for (int i = 8; i < 16; ++i)
-        {
+        for (int i = 0; i < 8; ++i)
             if (!testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
                 return false;
-        }
-        return true;
+        if (!testSquareOccupant(7, 0, E_Team.White, E_PieceType.Rook))
+            return false;
+        if (!testSquareOccupant(0, 0, E_Team.White, E_PieceType.Rook))
+            return false;
+        if (!testSquareOccupant(6, 0, E_Team.White, E_PieceType.Hors))
+            return false;
+        if (!testSquareOccupant(1, 0, E_Team.White, E_PieceType.Hors))
+            return false;
+        if (!testSquareOccupant(5, 0, E_Team.White, E_PieceType.Bish))
+            return false;
+        if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
+            return false;
+        if (!testSquareOccupant(3, 0, E_Team.White, E_PieceType.Quee))
+            return false;
+        return testSquareOccupant(4, 0, E_Team.White, E_PieceType.King);
     }
 
     public E_FailState checkFail(ref List<Vector2> indicators)
@@ -164,16 +175,25 @@ public class Board : MonoBehaviour
             return E_FailState.BishopLockout;
         }
 
+        if (checkBishopLockin(ref indicators))
+        {
+            return E_FailState.BishopLockin;
+        }
+
+        if (checkBishopBlocker(ref indicators))
+        {
+            return E_FailState.BishopBlocker;
+        }
+
         // check if a pawn is trapped
-        if(checkPawnTrapped(ref indicators))
+        if (checkPawnTrapped(ref indicators))
         {
             return E_FailState.PawnTrapped;
         }
 
-        // check if they've pawn blocked themselves
-        if(checkPawnWall(ref indicators))
+        if (checkPawnTrappedNoDiag(ref indicators))
         {
-            return E_FailState.PawnWall;
+            return E_FailState.PawnTrappedNoDiag;
         }
 
         return E_FailState.None;
@@ -203,6 +223,21 @@ public class Board : MonoBehaviour
         createPiece(5, 2, E_PieceType.Pawn, E_Team.Black);
         createPiece(3, 4, E_PieceType.Bish, E_Team.White);
         createPiece(0, 4, E_PieceType.Pawn, E_Team.White);
+    }
+    public void buildStartState_TestVictory()
+    {
+        for(int i = 0; i < 7; ++i)
+            createPiece(i, 1, E_PieceType.Pawn, E_Team.White);
+        createPiece(7, 2, E_PieceType.Pawn, E_Team.White);
+        createPiece(7, 0, E_PieceType.Rook, E_Team.White);
+        createPiece(0, 0, E_PieceType.Rook, E_Team.White);
+        createPiece(6, 0, E_PieceType.Hors, E_Team.White);
+        createPiece(1, 0, E_PieceType.Hors, E_Team.White);
+        createPiece(5, 0, E_PieceType.Bish, E_Team.White);
+        createPiece(2, 0, E_PieceType.Bish, E_Team.White);
+        createPiece(4, 0, E_PieceType.King, E_Team.White);
+        createPiece(3, 0, E_PieceType.Quee, E_Team.White);
+        createPiece(3, 7, E_PieceType.King, E_Team.Black);
     }
 
     public void filterMoveset(ref List<Vector2> moveset, Piece piece)
@@ -313,6 +348,38 @@ public class Board : MonoBehaviour
         }
         return false;
     }
+    bool checkBishopBlocker(ref List<Vector2> hints)
+    {
+        bool left;
+        bool right;
+        for (int i = 0; i < 8; ++i)
+        {
+            if(testSquareOccupant(i, 0, E_Team.Black, E_PieceType.Bish) ||
+                ((i != 2 || i != 5) && testSquareOccupant(i, 0, E_Team.White, E_PieceType.Bish)))
+            {
+                if (i - 1 < 0)
+                    left = true;
+                else
+                    left = testSquareOccupant(i - 1, 6, E_Team.White, E_PieceType.Pawn);
+                if (i + 1 > 0)
+                    right = true;
+                else
+                    right = testSquareOccupant(i - 1, 6, E_Team.White, E_PieceType.Pawn);
+
+                if (left && right)
+                {
+                    hints.Add(new Vector2(i, 0));
+                    if (i - 1 >= 0)
+                        hints.Add(new Vector2(i - 1, 1));
+                    if (i + 1 < 8)
+                        hints.Add(new Vector2(i + 1, 1));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool checkPawnTrapped(ref List<Vector2> hints)
     {
         if (Piece.s_tPieces[(int)E_Team.Black].nPieces == 16)
@@ -363,10 +430,6 @@ public class Board : MonoBehaviour
                 hints.Add(new Vector2(x, y - 1));
             }
         }
-        return false;
-    }
-    bool checkPawnWall(ref List<Vector2> hints)
-    {
         return false;
     }
 }

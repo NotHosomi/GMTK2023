@@ -10,6 +10,7 @@ public class Player : MonoBehaviour
     Piece selected = null;
     [SerializeField] GameObject selection_highlight;
     [SerializeField] GameObject failNotif;
+    [SerializeField] VictoryFade winScreen;
     List<Vector2> currentMoveset;
     E_Team currentPlayer = E_Team.White;
 
@@ -170,6 +171,7 @@ public class Player : MonoBehaviour
     public void onWin()
     {
         // Winscreen
+        winScreen.play();
         AudioInterface.play(E_Sound.Win);
     }
 
@@ -200,9 +202,9 @@ public class Player : MonoBehaviour
                     "\nYour pawn cannot move diagonally as there" +
                     "\nare no more pieces left to be uncaptured.";
                 break;
-            case E_FailState.PawnWall:
-                failmessage = "Your pawns have blocked the other pieces.";
-                break;
+            //case E_FailState.PawnWall:
+            //    failmessage = "Your pawns have blocked the other pieces.";
+            //    break;
             case E_FailState.NoValidMoves:
                 failmessage =
                     "The enemy has no valid moves, this is a" +
