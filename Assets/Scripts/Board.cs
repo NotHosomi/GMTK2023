@@ -34,6 +34,7 @@ public class Board : MonoBehaviour
         }
     }
     public static Board _i;
+    public static int start_id = 0;
     [SerializeField] GameObject piecePrefab;
     [SerializeField] GameObject moveIndicatorPrefab;
     [SerializeField] GameObject failIndicatorPrefab;
@@ -53,9 +54,8 @@ public class Board : MonoBehaviour
 
     void init()
     {
-        Piece.mountTextures(pieceSprites);
-        Square.assignHighlightPrefab(moveIndicatorPrefab);
-        Square.assignFailHighlightPrefab(failIndicatorPrefab);
+        Piece.onStart(pieceSprites);
+        Square.onStart(moveIndicatorPrefab, failIndicatorPrefab);
         slots = new List<Square>();
         history = new List<Move>();
         for (int y = 0; y < 8; ++y)
@@ -65,9 +65,29 @@ public class Board : MonoBehaviour
                 slots.Add(new Square(x, y));
             }
         }
+        if (start_id > 4)
+            start_id %= 4;
+        switch(start_id)
+        {
+            case 0:
+                buildStartState();
+                break;
+            case 1:
+                buildStartState1();
+                break;
+            case 2:
+                buildStartState2();
+                break;
+            case 3:
+                buildStartState3();
+                break;
+            case 4:
+                buildStartState_TestFail();
+                break;
+        }
         //buildStartState_TestVictory();
-        buildStartState_TestFail();
-        //buildStartState();
+        
+        //
     }
 
     public void createPiece(int x, int y, E_PieceType type, E_Team team)
@@ -233,6 +253,45 @@ public class Board : MonoBehaviour
         createPiece(3, 4, E_PieceType.Bish, E_Team.White);
         createPiece(0, 4, E_PieceType.Pawn, E_Team.White);
     }
+    public void buildStartState1()
+    {
+        createPiece(4, 2, E_PieceType.King, E_Team.White);
+        createPiece(7, 7, E_PieceType.King, E_Team.Black);
+        createPiece(1, 0, E_PieceType.Bish, E_Team.White);
+        createPiece(1, 1, E_PieceType.Bish, E_Team.White);
+        createPiece(6, 3, E_PieceType.Rook, E_Team.White);
+
+        createPiece(5, 1, E_PieceType.Pawn, E_Team.Black);
+        createPiece(1, 5, E_PieceType.Pawn, E_Team.Black);
+        createPiece(1, 4, E_PieceType.Pawn, E_Team.White);
+    }
+    public void buildStartState2()
+    {
+        createPiece(2, 3, E_PieceType.King, E_Team.White);
+        createPiece(7, 7, E_PieceType.King, E_Team.Black);
+        createPiece(2, 2, E_PieceType.Bish, E_Team.White);
+        createPiece(6, 6, E_PieceType.Rook, E_Team.White);
+
+        createPiece(5, 1, E_PieceType.Pawn, E_Team.Black);
+        createPiece(0, 4, E_PieceType.Pawn, E_Team.Black);
+        createPiece(0, 3, E_PieceType.Pawn, E_Team.White);
+        createPiece(6, 5, E_PieceType.Pawn, E_Team.Black);
+        createPiece(6, 4, E_PieceType.Pawn, E_Team.White);
+    }
+    public void buildStartState3()
+    {
+        createPiece(0, 3, E_PieceType.King, E_Team.White);
+        createPiece(4, 1, E_PieceType.King, E_Team.Black);
+        createPiece(1, 1, E_PieceType.Rook, E_Team.White);
+        createPiece(3, 1, E_PieceType.Bish, E_Team.White);
+        createPiece(6, 2, E_PieceType.Rook, E_Team.White);
+
+        createPiece(2, 4, E_PieceType.Hors, E_Team.Black);
+        createPiece(4, 4, E_PieceType.Hors, E_Team.Black);
+        createPiece(6, 4, E_PieceType.Hors, E_Team.Black);
+        createPiece(3, 5, E_PieceType.Hors, E_Team.Black);
+        createPiece(4, 5, E_PieceType.Pawn, E_Team.White);
+    }
     public void buildStartState_TestVictory()
     {
         for (int i = 0; i < 7; ++i)
@@ -265,6 +324,9 @@ public class Board : MonoBehaviour
         createPiece(1, 6, E_PieceType.Pawn, E_Team.Black);
         createPiece(2, 6, E_PieceType.Pawn, E_Team.Black);
         createPiece(3, 5, E_PieceType.Hors, E_Team.White);
+
+        createPiece(4, 0, E_PieceType.King, E_Team.White);
+        createPiece(0, 7, E_PieceType.King, E_Team.Black);
     }
 
     public void filterMoveset(ref List<Vector2> moveset, Piece piece)
@@ -374,7 +436,7 @@ public class Board : MonoBehaviour
                     left = true;
                 else
                     left = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
-                if (i + 1 > 0)
+                if (i + 1 > 7)
                     right = true;
                 else
                     right = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
@@ -404,11 +466,11 @@ public class Board : MonoBehaviour
                 if (i - 1 < 0)
                     left = true;
                 else
-                    left = testSquareOccupant(i - 1, 6, E_Team.White, E_PieceType.Pawn);
-                if (i + 1 > 0)
+                    left = testSquareOccupant(i - 1, 1, E_Team.White, E_PieceType.Pawn);
+                if (i + 1 > 7)
                     right = true;
                 else
-                    right = testSquareOccupant(i - 1, 6, E_Team.White, E_PieceType.Pawn);
+                    right = testSquareOccupant(i - 1, 1, E_Team.White, E_PieceType.Pawn);
 
                 if (left && right)
                 {
@@ -439,7 +501,7 @@ public class Board : MonoBehaviour
                     left = true;
                 else
                     left = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
-                if (i + 1 > 0)
+                if (i + 1 > 7)
                     right = true;
                 else
                     right = testSquareOccupant(i + 1, 6, E_Team.Black, E_PieceType.Pawn);
@@ -461,6 +523,7 @@ public class Board : MonoBehaviour
     bool checkPawnTrappedNoDiag(ref List<Vector2> hints)
     {
         // check each piece
+        bool flag = false;
         foreach(Piece p in Piece.s_tPieces[(int)E_Team.White].vPieces)
         {
             int x = (int)p.getPos().x;
@@ -472,8 +535,9 @@ public class Board : MonoBehaviour
             {
                 hints.Add(new Vector2(x, y));
                 hints.Add(new Vector2(x, y - 1));
+                flag = true;
             }
         }
-        return false;
+        return flag;
     }
 }

@@ -20,8 +20,10 @@ public enum E_Sound
 public class AudioInterface : MonoBehaviour
 {
     [SerializeField] public Sound[] sounds;
+    [SerializeField] public SpriteRenderer muteButton;
+    public bool MuteMusic = false;
 
-    static AudioInterface _i;
+    public static AudioInterface _i;
     private void Awake()
     {
         if(_i != null)
@@ -133,5 +135,18 @@ public class AudioInterface : MonoBehaviour
     {
         // temp
         playPieceHover();
+    }
+
+    public void clickMute()
+    {
+        MuteMusic = !MuteMusic;
+
+        GameObject canvas = GameObject.Find("Canvas");
+        AudioSource asource = canvas.GetComponent<AudioSource>();
+        asource.mute = MuteMusic;
+
+        muteButton.color = Color.white * (MuteMusic ? 0 : 1);
+
+        Debug.Log("Mute Music");
     }
 }

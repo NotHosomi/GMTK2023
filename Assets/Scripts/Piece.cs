@@ -53,9 +53,17 @@ public class Piece : MonoBehaviour
     Square currentSquare = null;
     static Sprite[] zSprites;
 
-    public static void mountTextures(Sprite[] _sprites)
+    public static void onStart(Sprite[] _sprites)
     {
         zSprites = _sprites;
+        zTypeTargets[0] = 8;
+        zTypeTargets[1] = 2;
+        zTypeTargets[2] = 2;
+        zTypeTargets[3] = 2;
+        zTypeTargets[4] = 1;
+        zTypeTargets[5] = 1;
+        s_tPieces[0] = new T_Team(false);
+        s_tPieces[1] = new T_Team(false);
     }
 
     public void init(int x, int y, E_PieceType type, E_Team team)
@@ -121,6 +129,17 @@ public class Piece : MonoBehaviour
     {
         --s_tPieces[(int)m_team].nPawnCandidates;
         --s_tPieces[(int)m_team].aTypes[(int)m_type];
+        if (m_type == E_PieceType.Bish)
+        {
+            if (Board._i.isWhiteSquare(m_x, m_y))
+            {
+                --s_tPieces[(int)m_team].nWhiteBishop;
+            }
+            else
+            {
+                --s_tPieces[(int)m_team].nBlackBishop;
+            }
+        }
 
         m_type = E_PieceType.Pawn;
         ++s_tPieces[(int)m_team].aTypes[(int)m_type];
@@ -133,9 +152,16 @@ public class Piece : MonoBehaviour
         m_type = to;
         ++s_tPieces[(int)m_team].nPawnCandidates;
         ++s_tPieces[(int)m_team].aTypes[(int)m_type];
-        if(Board._i.getIndex(m_x, m_y)%2 == 0)
+        if(m_type==E_PieceType.Bish)
         {
-            ++s_tPieces[(int)m_team].nBlackBishop;
+            if (Board._i.isWhiteSquare(m_x, m_y))
+            {
+                ++s_tPieces[(int)m_team].nWhiteBishop;
+            }
+            else
+            {
+                ++s_tPieces[(int)m_team].nBlackBishop;
+            }
         }
 
         reloadSprite();
