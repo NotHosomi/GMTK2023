@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -177,8 +176,10 @@ public class Player : MonoBehaviour
         AudioInterface.play(E_Sound.Win);
     }
 
+    bool failed = false;
     public void onFail(E_FailState failtype, List<Vector2> failIndicators)
     {
+        failed = true;
         string failmessage = "";
         switch(failtype)
         {
@@ -226,12 +227,6 @@ public class Player : MonoBehaviour
         Application.Quit();
     }
 
-    public void ReloadScene()
-    {
-        Debug.Log("Restart");
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-
     public void Undo()
     {
         if (blockUndo)
@@ -241,5 +236,6 @@ public class Player : MonoBehaviour
         Board._i.undo();
         // undo the white move
         Board._i.undo();
+        failed = false;
     }
 }
