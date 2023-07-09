@@ -24,6 +24,7 @@ public class HelpHover : MonoBehaviour
             StopCoroutine(hCoroutine);
         hCoroutine = StartCoroutine(fadeIn());
     }
+
     private void OnMouseExit()
     {
         if (hCoroutine != null)
@@ -34,13 +35,17 @@ public class HelpHover : MonoBehaviour
     IEnumerator fadeIn()
     {
         helpPanel.SetActive(true);
-        while (c.a < 255)
+        while (c.a < 1)
         {
             yield return new WaitForEndOfFrame();
 
             c.a += fadeRate * Time.deltaTime;
-            if (c.a > 255)
-                c.a = 255;
+            if (c.a > 1)
+            {
+                c.a = 1;
+                sr.color = c;
+                break;
+            }
             sr.color = c;
         }
         hCoroutine = null;
@@ -54,7 +59,11 @@ public class HelpHover : MonoBehaviour
 
             c.a -= fadeRate * Time.deltaTime;
             if (c.a < 0)
+            {
                 c.a = 0;
+                sr.color = c;
+                break;
+            }
             sr.color = c;
         }
         helpPanel.SetActive(false);
