@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class Player : MonoBehaviour
     int turns = 0;
     Piece selected = null;
     [SerializeField] GameObject selection_highlight;
+    [SerializeField] GameObject failNotif;
     List<Vector2> currentMoveset;
     E_Team currentPlayer = E_Team.White;
 
@@ -15,6 +17,10 @@ public class Player : MonoBehaviour
     public static E_Team otherPlayer(E_Team player)
     {
         return (E_Team)(((int)player + 1) % 2);
+    }
+    public static E_Team otherPlayer()
+    {
+        return (E_Team)(((int)_i.currentPlayer + 1) % 2);
     }
 
     private void Awake()
@@ -89,7 +95,7 @@ public class Player : MonoBehaviour
         {
             // get the moveset
             currentMoveset = selected.getMoveset();
-            Board._i.filterMoveset(ref currentMoveset, currentPlayer, selected);
+            Board._i.filterMoveset(ref currentMoveset, selected);
 
             // move the selection cursor
             selection_highlight.SetActive(true);
@@ -109,12 +115,14 @@ public class Player : MonoBehaviour
         {
             onWin();
         }
-        else if(Board._i.checkLoss())
+        else 
         {
-            onLoss();
-        }
-        else
-        {
+            List<Vector2> indicators = new List<Vector2>();
+            E_FailState state = Board._i.checkFail(ref indicators);
+            if (state != E_FailState.None)
+            {
+                onFail(state, indicators);
+            }
             // AI turn
             StartCoroutine(aiTurn());
         }
@@ -165,9 +173,64 @@ public class Player : MonoBehaviour
         AudioInterface.play(E_Sound.Win);
     }
 
-    public void onLoss()
+    public void onFail(E_FailState failtype, List<Vector2> failIndicators)
     {
-
+        string failmessage = "";
+        switch(failtype)
+        {
+            case E_FailState.BishopLockout:
+                failmessage =
+                    "Your pawns have blocked your bishop";
+                break;
+            case E_FailState.BishopLockin:
+                failmessage =
+                    "Their pawns have blocked your bishop";
+                break;
+            case E_FailState.PawnTrapped:
+                failmessage =
+                    "Their pawns have blocked your pawn";
+                break;
+            case E_FailState.PawnTrappedNoDiag:
+                failmessage =
+                    "Their pawn has blocked your pawn." +
+                    "\nYour pawn cannot move diagonally as there" +
+                    "\nare no more pieces left to be uncaptured";
+                break;
+            case E_FailState.PawnWall:
+                failmessage = "Your pawns have blocked the other pieces";
+                break;
+            case E_FailState.NoValidMoves:
+                failmessage =
+                    "The enemy has no valid moves, this is a" +
+                    "\nstalemate";
+                break;
+        }
+        failNotif.SetActive(true);
+        failNotif.GetComponent<SpriteRenderer>().color = Color.white;
+        failNotif.GetComponent<WarningHover>().SetWarning(true, failmessage);
         AudioInterface.play(E_Sound.Loss);
+    }
+
+    //button events
+    public void Quit()
+    {
+        Debug.Log("Quit");
+        Application.Quit();
+    }
+
+    public void ReloadScene()
+    {
+        Debug.Log("Restart");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void Undo()
+    {
+        Color c = failNotif.GetComponent<SpriteRenderer>().color;
+        c.r = 80;
+        c.g = 80;
+        c.b = 80;
+        failNotif.GetComponent<SpriteRenderer>().color = c;
+        Board._i.undo();
     }
 }

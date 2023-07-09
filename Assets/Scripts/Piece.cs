@@ -86,8 +86,8 @@ public class Piece : MonoBehaviour
     {
         // demote check
         int endzone = m_team == E_Team.Black ? 0 : 7;
-        if(y == endzone && m_type != E_PieceType.Pawn && m_type != E_PieceType.King && validatePawn(m_team) &&
-            s_tPieces[(int)m_team].aTypes[(int)m_type] > zTypeTargets[(int)m_type])
+        if(y == endzone && m_type != E_PieceType.Pawn && m_type != E_PieceType.King && validatePawn(m_team)
+            /*&& s_tPieces[(int)m_team].aTypes[(int)m_type] > zTypeTargets[(int)m_type])*/)
         {
             demote();
         }
@@ -152,7 +152,7 @@ public class Piece : MonoBehaviour
             return moves;
         moves.Add(new Vector2(m_x, newY));
 
-        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) == 16;
+        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) < 16;
         if(canDiagonal)
         {
             moves.Add(new Vector2(srcX + 1, newY));
@@ -236,39 +236,42 @@ public class Piece : MonoBehaviour
         int nColouredBishop;
         if (Board._i.isWhiteSquare(x, y))
         {
-            nColouredBishop = Piece.s_tPieces[(int)team].bWhiteBishop ? 1 : 0;
+            nColouredBishop = s_tPieces[(int)team].bWhiteBishop ? 1 : 0;
         }
         else
         {
-            nColouredBishop = Piece.s_tPieces[(int)team].bBlackBishop ? 1 : 0;
+            nColouredBishop = s_tPieces[(int)team].bBlackBishop ? 1 : 0;
         }
         return
-            Piece.s_tPieces[(int)team].nPawnCandidates +                // pawns to be
-            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +  // existing pawns
+            s_tPieces[(int)team].nPawnCandidates +                // pawns to be
+            s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +  // existing pawns
             nColouredBishop                                             // the existing bishop of this colour
             <
-            Piece.zTypeTargets[(int)E_PieceType.Pawn] +     // 8 pawns
-            Piece.zTypeTargets[(int)E_PieceType.Bish] / 2;  // 1 of this coloured bishol
+            zTypeTargets[(int)E_PieceType.Pawn] +     // 8 pawns
+            zTypeTargets[(int)E_PieceType.Bish] / 2;  // 1 of this coloured bishol
     }
 
     // Returns true if the sum of pawns or excess of other types is less than 8
     public static bool validatePawn(E_Team team)
     {
         return
-            Piece.s_tPieces[(int)team].nPawnCandidates +
-            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn]
+            s_tPieces[(int)team].nPawnCandidates +
+            s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn]
             <
-            Piece.zTypeTargets[(int)E_PieceType.Pawn];    // 8 pawns
+            zTypeTargets[(int)E_PieceType.Pawn];    // 8 pawns
     }
 
     public static bool validateOther(E_PieceType type, E_Team team)
     {
         return
-            Piece.s_tPieces[(int)team].nPawnCandidates +
-            Piece.s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +
-            Piece.s_tPieces[(int)team].aTypes[(int)type]
+            s_tPieces[(int)team].nPawnCandidates +
+            s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +
+            s_tPieces[(int)team].aTypes[(int)type]
             <
-            Piece.zTypeTargets[(int)E_PieceType.Pawn] + // 8 pawns + 2 of this type
-            Piece.zTypeTargets[(int)type];
+            zTypeTargets[(int)E_PieceType.Pawn] + // 8 pawns + 2 of this type
+            zTypeTargets[(int)type];
     }
+
+    //todo
+    // change s_tPieces bool bWhiteBishop into int nWhiteBishop, etc
 }

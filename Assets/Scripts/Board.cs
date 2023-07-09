@@ -2,6 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum E_FailState
+{
+    None,
+    NoValidMoves,
+    PawnTrapped,
+    PawnTrappedNoDiag,
+    BishopLockout,
+    BishopLockin,
+    PawnWall,
+}
+
 public class Board : MonoBehaviour
 {
     struct Move
@@ -23,7 +34,9 @@ public class Board : MonoBehaviour
     public static Board _i;
     [SerializeField] GameObject piecePrefab;
     [SerializeField] GameObject moveIndicatorPrefab;
+    [SerializeField] GameObject failIndicatorPrefab;
     [SerializeField] Sprite[] pieceSprites;
+    [SerializeField] WarningHover failNotif;
     List<Square> slots;
     List<Move> history;
 
@@ -41,6 +54,7 @@ public class Board : MonoBehaviour
     {
         Piece.mountTextures(pieceSprites);
         Square.assignHighlightPrefab(moveIndicatorPrefab);
+        Square.assignFailHighlightPrefab(failIndicatorPrefab);
         slots = new List<Square>();
         history = new List<Move>();
         for (int y = 0; y < 8; ++y)
@@ -71,7 +85,11 @@ public class Board : MonoBehaviour
         // TODO: if the move matches next in the move list, then its just a redo
 
         E_PieceType spawn = piece.move(x, y);
-        history.Add(new Move( oldX, oldY, x, y, spawn));
+
+        history.Add(new Move(oldX, oldY, x, y, spawn));
+
+        E_Sound moveSound = spawn == E_PieceType.None ? E_Sound.PieceMove : E_Sound.PieceMoveWithSpawn;
+        AudioInterface.play(moveSound);
     }
 
     #region GridInterface
@@ -129,30 +147,37 @@ public class Board : MonoBehaviour
 
     public bool checkWin()
     {
-        for (int i = 0; i < 8 * 2; ++i)
+        for (int i = 8; i < 16; ++i)
         {
-            Piece p = slots[i].getOccupant();
-            if (!p)
-                return false;
-            if (p.getTeam() != E_Team.White)
+            if (!testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
                 return false;
         }
         return true;
     }
 
-    public bool checkLoss()
+    public E_FailState checkFail(ref List<Vector2> indicators)
     {
-        // check if they've pawn blocked themselves
-        bool pawnBlockFlag = false;
         // check bishop entry
         if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
         {
             if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
-                pawnBlockFlag = true;
-
+            {
+                indicators.Add(new Vector2(2, 0));
+                return E_FailState.BishopLockout;
+            }
         }
-        // check rook entry
-        for(int i = 8; i < 16; ++i)
+        if (!testSquareOccupant(5, 0, E_Team.White, E_PieceType.Bish))
+        {
+            if (testSquareOccupant(4, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(6, 1, E_Team.White, E_PieceType.Pawn))
+            {
+                indicators.Add(new Vector2(5, 0));
+                return E_FailState.BishopLockout;
+            }
+        }
+
+        // check if they've pawn blocked themselves
+        bool pawnBlockFlag = false;
+        for (int i = 8; i < 16; ++i)
         {
             if (testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
             {
@@ -160,8 +185,16 @@ public class Board : MonoBehaviour
                 break;
             }
         }
+        if(pawnBlockFlag)
+        {
+            for(int i = 0; i<8; ++ i)
+            {
 
-        return pawnBlockFlag;
+            }
+            return E_FailState.PawnWall;
+        }
+
+        return E_FailState.None;
     }
 
     // returns true if there is a piece at the coords that matches the conditions
@@ -173,6 +206,8 @@ public class Board : MonoBehaviour
         Piece p = s.getOccupant();
         if (!p)
             return false;
+        if (type == E_PieceType.None)
+            return p.getTeam() == team;
         return p.getTeam() == team && p.getType() == type;
     }
 
@@ -188,7 +223,7 @@ public class Board : MonoBehaviour
         createPiece(0, 4, E_PieceType.Pawn, E_Team.White);
     }
 
-    public void filterMoveset(ref List<Vector2> moveset, E_Team currentPlayer, Piece piece)
+    public void filterMoveset(ref List<Vector2> moveset, Piece piece)
     {
         int i = 0;
         while(i < moveset.Count)
@@ -210,11 +245,11 @@ public class Board : MonoBehaviour
             }
             // can't put enemy king in check
             List<Vector2> destMoveset = piece.getMoveset(newX, newY);
-            E_Team enemy = Player.otherPlayer(currentPlayer);
+            E_Team enemy = Player.otherPlayer();
             bool checkFlag = false;
             foreach (Vector2 dest in destMoveset)
             {
-                // if there is a black king in the would-be moveset
+                // if there is an enemy king in the would-be moveset
                 if(testSquareOccupant((int)dest.x, (int)dest.y, enemy, E_PieceType.King))
                 {
                     // check
@@ -236,6 +271,6 @@ public class Board : MonoBehaviour
 
     public void undo()
     {
-
+        // TODO
     }
 }
