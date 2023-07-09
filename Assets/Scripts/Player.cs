@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    static Player _i = null;
+    public static Player _i = null;
     int turns = 0;
     Piece selected = null;
     [SerializeField] GameObject selection_highlight;
@@ -66,7 +66,10 @@ public class Player : MonoBehaviour
     {
         if (x > 7 || x < 0 || y > 7 || y < 0)
             return;
-        Piece piece = Board._i.getSquare(x, y).getOccupant();
+        Square s = Board._i.getSquare(x, y);
+        if (s == null)
+            return;
+        Piece piece = s.getOccupant();
         // selecting one of our pieces
         if (piece != null && piece.getTeam() == currentPlayer)
         {
@@ -130,7 +133,6 @@ public class Player : MonoBehaviour
     bool blockUndo = false;
     IEnumerator aiTurn()
     {
-        // TODO: disable undo button
         blockUndo = true;
 
         yield return new WaitForSeconds(.25f);
@@ -156,7 +158,6 @@ public class Player : MonoBehaviour
         index = Random.Range(0, currentMoveset.Count);
         Board._i.movePiece(selected, (int)currentMoveset[index].x, (int)currentMoveset[index].y);
 
-        // TODO: renable undo button
         blockUndo = false;
 
         endTurn();
@@ -233,6 +234,8 @@ public class Player : MonoBehaviour
     {
         if (blockUndo)
             return;
+        redBackground.SetActive(false);
+        selectPiece(null);
         failNotif.GetComponent<SpriteRenderer>().color = Color.white * 0.5f;
         // undo the black move
         Board._i.undo();

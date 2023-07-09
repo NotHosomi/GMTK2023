@@ -95,7 +95,6 @@ public class Square
         {
             int index = Random.Range(0, possibilities.Count);
             type = possibilities[index];
-            // TODO: this needs more validation
             switch (type)
             {
                 case E_PieceType.Pawn:

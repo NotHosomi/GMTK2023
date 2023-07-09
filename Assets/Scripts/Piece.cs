@@ -77,12 +77,35 @@ public class Piece : MonoBehaviour
         int j = (int)type;
         ++(s_tPieces[i].nPieces);
         ++(s_tPieces[i].aTypes[j]);
+        if(type == E_PieceType.Bish)
+        {
+            if(Board._i.isWhiteSquare(x,y))
+                ++s_tPieces[i].nWhiteBishop;
+            else
+                ++s_tPieces[i].nBlackBishop;
+        }
         s_tPieces[i].vPieces.Add(this);
         reloadSprite();
         currentSquare = Board._i.getSquare(x, y);
     }
-    ~Piece()
+    public void unspawn()
     {
+        s_tPieces[(int)m_team].vPieces.Remove(this);
+        --s_tPieces[(int)m_team].nPieces;
+        --s_tPieces[(int)m_team].aTypes[(int)m_type];
+        //if (m_type != E_PieceType.Pawn)
+        //    --s_tPieces[(int)m_team].nPawnCandidates;
+        if (m_type == E_PieceType.Bish)
+        {
+            if (Board._i.isWhiteSquare(m_x, m_y))
+            {
+                --s_tPieces[(int)m_team].nWhiteBishop;
+            }
+            else
+            {
+                --s_tPieces[(int)m_team].nBlackBishop;
+            }
+        }
     }
 
     void reloadSprite()

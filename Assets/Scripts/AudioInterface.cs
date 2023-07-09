@@ -137,9 +137,12 @@ public class AudioInterface : MonoBehaviour
         playPieceHover();
     }
 
-    public void clickMute()
+    public void clickMute(bool forceMute = false)
     {
-        MuteMusic = !MuteMusic;
+        if (!forceMute)
+            MuteMusic = !MuteMusic;
+        else
+            MuteMusic = false;
 
         GameObject canvas = GameObject.Find("Canvas");
         AudioSource asource = canvas.GetComponent<AudioSource>();

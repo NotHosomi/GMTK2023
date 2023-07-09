@@ -377,11 +377,16 @@ public class Board : MonoBehaviour
 
     public void undo()
     {
+        if (history.Count == 0)
+            return;
+
         Move last = history[history.Count - 1];
+        history.RemoveAt(history.Count - 1);
         if (last.spawned != E_PieceType.None)
         {
             Piece retakePiece = getSquare(last.srcX, last.srcY).getOccupant();
-            Destroy(retakePiece);
+            retakePiece.unspawn();
+            Destroy(retakePiece.gameObject);
         }
         Piece transientPiece = getSquare(last.destX, last.destY).getOccupant();
         transientPiece.setPos(last.srcX, last.srcY);
@@ -390,7 +395,7 @@ public class Board : MonoBehaviour
             transientPiece.promote(last.demotedFrom);
         }
 
-        // TODO
+        // TODO test
     }
 
 
