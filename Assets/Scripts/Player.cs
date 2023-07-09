@@ -56,8 +56,14 @@ public class Player : MonoBehaviour
             Vector3 mouse_pos = Input.mousePosition;
             mouse_pos.z = 1;
             Vector2 pos = (Vector2)Camera.main.ScreenToWorldPoint(mouse_pos);
+            Debug.Log(pos.x + 0.5f + ", " + pos.y + 0.5f);
+            if (pos.x < -0.5f)
+                return;
+            if (pos.y < -0.5f)
+                return;
             int x = (int)(pos.x + 0.5f);
             int y = (int)(pos.y + 0.5f);
+            Debug.Log(x + ", " + y);
             onClick(x, y);
         }
     }

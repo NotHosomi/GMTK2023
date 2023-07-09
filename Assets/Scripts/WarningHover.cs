@@ -9,6 +9,7 @@ public class WarningHover : MonoBehaviour
     [SerializeField] GameObject WarningBox;
     [SerializeField] Text WarningText;
     List<Vector2> hints = new List<Vector2>();
+    Color colorBuffer = Color.white* 0.8f;
     public void SetWarning(bool visible, List<Vector2> _hints, string text = "")
     {
         hints = _hints;
@@ -26,6 +27,7 @@ public class WarningHover : MonoBehaviour
     private void OnMouseEnter()
     {
         WarningBox.SetActive(true);
+        colorBuffer = gameObject.GetComponent<SpriteRenderer>().color;
         gameObject.GetComponent<SpriteRenderer>().color = Color.white * 0.8f;
         foreach(Vector2 coord in hints)
         {
@@ -36,6 +38,7 @@ public class WarningHover : MonoBehaviour
     }
     private void OnMouseExit()
     {
+        gameObject.GetComponent<SpriteRenderer>().color = colorBuffer;
         WarningBox.SetActive(false);
         for (int i = 0; i < 64; ++i)
             Board._i.getSquare(i).setFailHint(false);

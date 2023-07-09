@@ -350,7 +350,26 @@ public class Board : MonoBehaviour
                 continue;
             }
             // can't put enemy king in check
-            List<Vector2> destMoveset = piece.getMoveset(newX, newY);
+            List<Vector2> destMoveset;
+            if (piece.getType() != E_PieceType.Pawn)
+            {
+                destMoveset = piece.getMoveset(newX, newY);
+            }
+            else
+            {
+                int yOffset;
+                if (piece.getTeam() == E_Team.Black)
+                {
+                    yOffset = 1;
+                }
+                else
+                {
+                    yOffset = -1;
+                }
+                destMoveset = new List<Vector2>();
+                destMoveset.Add(new Vector2(newX + 1, newY - yOffset));
+                destMoveset.Add(new Vector2(newX - 1, newY - yOffset));
+            }
             E_Team enemy = Player.otherPlayer();
             bool checkFlag = false;
             foreach (Vector2 dest in destMoveset)
