@@ -4,16 +4,17 @@ using UnityEngine;
 
 public class VictoryFade : MonoBehaviour
 {
-    [SerializeField] float fadeRate;
     Coroutine hCoroutine;
     Vector3 pos;
     Color c;
     SpriteRenderer sr;
+    SpriteRenderer sr_child;
 
     public void play()
     {
         gameObject.SetActive(true);
         sr = GetComponent<SpriteRenderer>();
+        sr_child = GetComponentInChildren<SpriteRenderer>();
         pos = transform.position;
         pos.y = 3.5f;
         transform.position = pos;
@@ -21,6 +22,7 @@ public class VictoryFade : MonoBehaviour
         c = sr.color;
         c.a = 0;
         sr.color = c;
+        sr_child.color = c;
         StartCoroutine(fadeIn());
     }
 
@@ -34,6 +36,7 @@ public class VictoryFade : MonoBehaviour
         transform.position = pos;
         c.a = 0;
         sr.color = c;
+        sr_child.color = c;
         gameObject.SetActive(false);
     }
 
@@ -49,17 +52,20 @@ public class VictoryFade : MonoBehaviour
             {
                 c.a += Time.deltaTime;
                 sr.color = c;
+                sr_child.color = c;
             }
             else
             {
                 c.a = 1;
                 sr.color = c;
+                sr_child.color = c;
             }
 
             pos = transform.position;
             pos.y = 3.5f - t/2;
             transform.position = pos;
             sr.color = c;
+            sr_child.color = c;
         }
         hCoroutine = null;
     }

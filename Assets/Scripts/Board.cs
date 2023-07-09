@@ -22,13 +22,15 @@ public class Board : MonoBehaviour
         public int destX;
         public int destY;
         public E_PieceType spawned;
-        public Move(int oldX, int oldY, int newX, int newY, E_PieceType _spawned)
+        public E_PieceType demotedFrom;
+        public Move(int oldX, int oldY, int newX, int newY, E_PieceType _spawned, E_PieceType _demotedFrom)
         {
             srcX = oldX;
             srcY = oldY;
             destX = newX;
             destY = newY;
             spawned = _spawned;
+            demotedFrom = _demotedFrom;
         }
     }
     public static Board _i;
@@ -63,7 +65,8 @@ public class Board : MonoBehaviour
                 slots.Add(new Square(x, y));
             }
         }
-        buildStartState_TestVictory();
+        //buildStartState_TestVictory();
+        buildStartState_TestFail();
         //buildStartState();
     }
 
@@ -84,9 +87,9 @@ public class Board : MonoBehaviour
 
         // TODO: if the move matches next in the move list, then its just a redo
 
-        E_PieceType spawn = piece.move(x, y);
-
-        history.Add(new Move(oldX, oldY, x, y, spawn));
+        E_PieceType demotion;
+        E_PieceType spawn = piece.move(x, y, out demotion);
+        history.Add(new Move(oldX, oldY, x, y, spawn, demotion));
 
         E_Sound moveSound = spawn == E_PieceType.None ? E_Sound.PieceMove : E_Sound.PieceMoveWithSpawn;
         AudioInterface.play(moveSound);
@@ -98,6 +101,12 @@ public class Board : MonoBehaviour
         if (x >= 8 || y >= 8 || x < 0 || y < 0)
             return null;
         return slots[x + y * 8];
+    }
+    public Square getSquare(int i)
+    {
+        if (i < 0 || i >= 64)
+            return null;
+        return slots[i];
     }
     public Square getSquare(Vector2 pos)
     {
@@ -226,7 +235,7 @@ public class Board : MonoBehaviour
     }
     public void buildStartState_TestVictory()
     {
-        for(int i = 0; i < 7; ++i)
+        for (int i = 0; i < 7; ++i)
             createPiece(i, 1, E_PieceType.Pawn, E_Team.White);
         createPiece(7, 2, E_PieceType.Pawn, E_Team.White);
         createPiece(7, 0, E_PieceType.Rook, E_Team.White);
@@ -238,6 +247,24 @@ public class Board : MonoBehaviour
         createPiece(4, 0, E_PieceType.King, E_Team.White);
         createPiece(3, 0, E_PieceType.Quee, E_Team.White);
         createPiece(3, 7, E_PieceType.King, E_Team.Black);
+    }
+    public void buildStartState_TestFail()
+    {
+        // bishop lockout
+        createPiece(1, 2, E_PieceType.Pawn, E_Team.White);
+        createPiece(3, 1, E_PieceType.Pawn, E_Team.White);
+
+        // pawn block
+        createPiece(0, 5, E_PieceType.Pawn, E_Team.White);
+        createPiece(1, 5, E_PieceType.Pawn, E_Team.White);
+        createPiece(0, 3, E_PieceType.Pawn, E_Team.Black);
+        createPiece(1, 3, E_PieceType.Pawn, E_Team.Black);
+
+        // pawn lockin
+        createPiece(0, 6, E_PieceType.Pawn, E_Team.Black);
+        createPiece(1, 6, E_PieceType.Pawn, E_Team.Black);
+        createPiece(2, 6, E_PieceType.Pawn, E_Team.Black);
+        createPiece(3, 5, E_PieceType.Hors, E_Team.White);
     }
 
     public void filterMoveset(ref List<Vector2> moveset, Piece piece)
@@ -288,6 +315,19 @@ public class Board : MonoBehaviour
 
     public void undo()
     {
+        Move last = history[history.Count - 1];
+        if (last.spawned != E_PieceType.None)
+        {
+            Piece retakePiece = getSquare(last.srcX, last.srcY).getOccupant();
+            Destroy(retakePiece);
+        }
+        Piece transientPiece = getSquare(last.destX, last.destY).getOccupant();
+        transientPiece.setPos(last.srcX, last.srcY);
+        if(last.demotedFrom != E_PieceType.None)
+        {
+            transientPiece.promote(last.demotedFrom);
+        }
+
         // TODO
     }
 
@@ -305,6 +345,8 @@ public class Board : MonoBehaviour
             if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
             {
                 hints.Add(new Vector2(2, 0));
+                hints.Add(new Vector2(1, 1));
+                hints.Add(new Vector2(3, 1));
                 return true;
             }
         }
@@ -313,6 +355,8 @@ public class Board : MonoBehaviour
             if (testSquareOccupant(4, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(6, 1, E_Team.White, E_PieceType.Pawn))
             {
                 hints.Add(new Vector2(5, 0));
+                hints.Add(new Vector2(4, 1));
+                hints.Add(new Vector2(6, 1));
                 return true;
             }
         }
@@ -355,7 +399,7 @@ public class Board : MonoBehaviour
         for (int i = 0; i < 8; ++i)
         {
             if(testSquareOccupant(i, 0, E_Team.Black, E_PieceType.Bish) ||
-                ((i != 2 || i != 5) && testSquareOccupant(i, 0, E_Team.White, E_PieceType.Bish)))
+                (i != 2 && i != 5 && testSquareOccupant(i, 0, E_Team.White, E_PieceType.Bish)))
             {
                 if (i - 1 < 0)
                     left = true;

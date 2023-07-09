@@ -59,7 +59,6 @@ public class Player : MonoBehaviour
             Vector2 pos = (Vector2)Camera.main.ScreenToWorldPoint(mouse_pos);
             int x = (int)(pos.x + 0.5f);
             int y = (int)(pos.y + 0.5f);
-            Debug.Log("Clicked " + x + ", " + y);
             onClick(x, y);
         }
     }
@@ -129,34 +128,37 @@ public class Player : MonoBehaviour
         }
     }
 
+    bool blockUndo = false;
     IEnumerator aiTurn()
     {
         // TODO: disable undo button
+        blockUndo = true;
 
         yield return new WaitForSeconds(.25f);
-        List<Piece> pieces = Piece.s_tPieces[(int)E_Team.Black].vPieces;
-        int index = Random.Range(0, pieces.Count - 1);
-        selectPiece(pieces[index]);
-        int iterations = pieces.Count;
-        while (currentMoveset.Count == 0)
+        List<Piece> pieces = new List<Piece>(Piece.s_tPieces[(int)E_Team.Black].vPieces);
+        int index;
+        do
         {
-            if (--iterations == 0)
+            if (pieces.Count == 0)
             {
-                Debug.Log("AI cannot move");
+                selectPiece(null);
                 onFail(E_FailState.NoValidMoves, new List<Vector2>());
                 yield break;
             }
-            index = ((index + 1) % pieces.Count);
 
-            Debug.Log("selecting index " + index);
+            index = Random.Range(0, pieces.Count);
             selectPiece(pieces[index]);
-            yield return new WaitForSeconds(.25f);
-        }
+            pieces.RemoveAt(index);
+            yield return new WaitForSeconds(.1f);
+
+        } while (currentMoveset.Count == 0);
+
         yield return new WaitForSeconds(.25f);
-        index = Random.Range(0, currentMoveset.Count-1);
+        index = Random.Range(0, currentMoveset.Count);
         Board._i.movePiece(selected, (int)currentMoveset[index].x, (int)currentMoveset[index].y);
 
         // TODO: renable undo button
+        blockUndo = false;
 
         endTurn();
         
@@ -190,7 +192,7 @@ public class Player : MonoBehaviour
                 break;
             case E_FailState.BishopBlocker:
                 failmessage =
-                    "An enemy bishop is trapped behind your pawns.";
+                    "A bishop is trapped behind your pawns.";
                 break;
             case E_FailState.PawnTrapped:
                 failmessage =
@@ -213,7 +215,7 @@ public class Player : MonoBehaviour
         }
         failNotif.SetActive(true);
         failNotif.GetComponent<SpriteRenderer>().color = Color.white;
-        failNotif.GetComponent<WarningHover>().SetWarning(true, failmessage);
+        failNotif.GetComponent<WarningHover>().SetWarning(true, failIndicators, failmessage);
         AudioInterface.play(E_Sound.Loss);
     }
 
@@ -232,11 +234,12 @@ public class Player : MonoBehaviour
 
     public void Undo()
     {
-        Color c = failNotif.GetComponent<SpriteRenderer>().color;
-        c.r = 80;
-        c.g = 80;
-        c.b = 80;
-        failNotif.GetComponent<SpriteRenderer>().color = c;
+        if (blockUndo)
+            return;
+        failNotif.GetComponent<SpriteRenderer>().color = Color.white * 0.5f;
+        // undo the black move
+        Board._i.undo();
+        // undo the white move
         Board._i.undo();
     }
 }

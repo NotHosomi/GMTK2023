@@ -8,8 +8,10 @@ public class WarningHover : MonoBehaviour
     public string text = "";
     [SerializeField] GameObject WarningBox;
     [SerializeField] Text WarningText;
-    public void SetWarning(bool visible, string text = "")
+    List<Vector2> hints = new List<Vector2>();
+    public void SetWarning(bool visible, List<Vector2> _hints, string text = "")
     {
+        hints = _hints;
         gameObject.SetActive(visible);
         if (visible)
         {
@@ -24,9 +26,18 @@ public class WarningHover : MonoBehaviour
     private void OnMouseEnter()
     {
         WarningBox.SetActive(true);
+        gameObject.GetComponent<SpriteRenderer>().color = Color.white * 0.8f;
+        foreach(Vector2 coord in hints)
+        {
+            Square s = Board._i.getSquare(coord);
+            if (s != null)
+                s.setFailHint(true);
+        }
     }
     private void OnMouseExit()
     {
         WarningBox.SetActive(false);
+        for (int i = 0; i < 64; ++i)
+            Board._i.getSquare(i).setFailHint(false);
     }
 }

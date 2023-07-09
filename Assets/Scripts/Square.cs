@@ -57,7 +57,7 @@ public class Square
         team = Player.otherPlayer(team);
         E_PieceType spawned = E_PieceType.None;
 
-        if (Piece.s_tPieces[(int)team].nPieces >=16)
+        if (Piece.s_tPieces[(int)team].nPieces >= 16)
         {
             return spawned;
         }
@@ -109,5 +109,10 @@ public class Square
     public void setMoveSelector(bool show)
     {
         highlight.SetActive(show);
+    }
+
+    public void setFailHint(bool state)
+    {
+        failhighlight.SetActive(state);
     }
 }

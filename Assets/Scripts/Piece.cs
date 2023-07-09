@@ -23,8 +23,8 @@ public struct T_Team
     public int nPawnCandidates;
     public int[] aTypes;
     public int nPieces;
-    public bool bWhiteBishop;
-    public bool bBlackBishop;
+    public int nWhiteBishop;
+    public int nBlackBishop;
     public List<Piece> vPieces;
 
     public T_Team(bool doesNothing=false)
@@ -32,8 +32,8 @@ public struct T_Team
         nPawnCandidates = 0;
         aTypes = new int[] { 0, 0, 0, 0, 0, 0 };
         nPieces = 0;
-        bWhiteBishop = false;
-        bBlackBishop = false;
+        nWhiteBishop = 0;
+        nBlackBishop = 0;
         vPieces = new List<Piece>();
     }
 
@@ -76,19 +76,22 @@ public class Piece : MonoBehaviour
     ~Piece()
     {
     }
+
     void reloadSprite()
     {
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         sr.sprite = zSprites[(int)m_team * 6 + (int)m_type];
     }
 
-    public E_PieceType move(int x, int y)
+    public E_PieceType move(int x, int y, out E_PieceType demotedFrom)
     {
         // demote check
         int endzone = m_team == E_Team.Black ? 0 : 7;
-        if(y == endzone && m_type != E_PieceType.Pawn && m_type != E_PieceType.King && validatePawn(m_team)
+        demotedFrom = E_PieceType.None;
+        if (y == endzone && m_type != E_PieceType.Pawn && m_type != E_PieceType.King && validatePawn(m_team)
             /*&& s_tPieces[(int)m_team].aTypes[(int)m_type] > zTypeTargets[(int)m_type])*/)
         {
+            demotedFrom = m_type;
             demote();
         }
         
@@ -113,14 +116,27 @@ public class Piece : MonoBehaviour
         transform.position = pos;
         return spawn;
     }
+
     void demote()
     {
-        // TODO: implement value decrementers
         --s_tPieces[(int)m_team].nPawnCandidates;
         --s_tPieces[(int)m_team].aTypes[(int)m_type];
 
         m_type = E_PieceType.Pawn;
         ++s_tPieces[(int)m_team].aTypes[(int)m_type];
+
+        reloadSprite();
+    }
+    public void promote(E_PieceType to)
+    {
+        --s_tPieces[(int)m_team].aTypes[(int)m_type];
+        m_type = to;
+        ++s_tPieces[(int)m_team].nPawnCandidates;
+        ++s_tPieces[(int)m_team].aTypes[(int)m_type];
+        if(Board._i.getIndex(m_x, m_y)%2 == 0)
+        {
+            ++s_tPieces[(int)m_team].nBlackBishop;
+        }
 
         reloadSprite();
     }
@@ -260,18 +276,13 @@ public class Piece : MonoBehaviour
     public static bool validateBishop(E_Team team, int x, int y)
     {
         int nColouredBishop;
-        if (Board._i.isWhiteSquare(x, y))
-        {
-            nColouredBishop = s_tPieces[(int)team].bWhiteBishop ? 1 : 0;
-        }
-        else
-        {
-            nColouredBishop = s_tPieces[(int)team].bBlackBishop ? 1 : 0;
-        }
+        nColouredBishop = Board._i.isWhiteSquare(x, y) ?
+            s_tPieces[(int)team].nWhiteBishop :
+            s_tPieces[(int)team].nBlackBishop;
         return
             s_tPieces[(int)team].nPawnCandidates +                // pawns to be
             s_tPieces[(int)team].aTypes[(int)E_PieceType.Pawn] +  // existing pawns
-            nColouredBishop                                             // the existing bishop of this colour
+            nColouredBishop                                       // the existing bishops of this colour
             <
             zTypeTargets[(int)E_PieceType.Pawn] +     // 8 pawns
             zTypeTargets[(int)E_PieceType.Bish] / 2;  // 1 of this coloured bishol
@@ -296,6 +307,19 @@ public class Piece : MonoBehaviour
             <
             zTypeTargets[(int)E_PieceType.Pawn] + // 8 pawns + 2 of this type
             zTypeTargets[(int)type];
+    }
+
+    public void setPos(int x, int y)
+    {
+        currentSquare.deoccupy();
+        currentSquare = Board._i.getSquare(x, y);
+        currentSquare.occupy(this);
+
+        // move gameobject
+        Vector3 pos = transform.position;
+        pos.x = m_x = x;
+        pos.y = m_y = y;
+        transform.position = pos;
     }
 
     //todo
