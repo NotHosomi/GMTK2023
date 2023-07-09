@@ -146,20 +146,46 @@ public class Piece : MonoBehaviour
     {
         List<Vector2> moves = new List<Vector2>();
 
+        // regular move
         bool isBlack = m_team == E_Team.Black;
         int newY = srcY + (isBlack ? 1 : -1);
         if (newY > 6 || newY < 1) // can't move onto row 0 or row 7
             return moves;
         moves.Add(new Vector2(m_x, newY));
 
-        bool canDiagonal = (isBlack ? s_tPieces[(int)E_Team.Black].nPieces : s_tPieces[(int)E_Team.White].nPieces) < 16;
-        if(canDiagonal)
+        // diag
+        if (canPawnDiag(srcX, srcY))
         {
             moves.Add(new Vector2(srcX + 1, newY));
             moves.Add(new Vector2(srcX - 1, newY));
         }
 
+        // doublestep
+        if(Board._i.getSquare(m_x, newY).getOccupant() == null)
+        {
+            if (isBlack && srcY == 4)
+                moves.Add(new Vector2(m_x, srcY + 2));
+            if (!isBlack && srcY == 3)
+                moves.Add(new Vector2(m_x, srcY - 2));
+        }
+
         return moves;
+    }
+    public bool canPawnDiag(int srcX, int srcY)
+    {
+        int enemy = (int)Player.otherPlayer(m_team);
+        // can spawn something
+        bool can = s_tPieces[enemy].nPieces < 16;
+        if (m_team == E_Team.Black && srcY == 0)
+        {
+            // if on the backline, can spawn something other than a pawn
+            can |= (s_tPieces[enemy].nPieces - s_tPieces[enemy].aTypes[(int)E_PieceType.Pawn]) < 8;
+        }
+        else if (m_team == E_Team.White && srcY == 7)
+        {
+            can |= (s_tPieces[enemy].nPieces - s_tPieces[enemy].aTypes[(int)E_PieceType.Pawn]) < 8;
+        }
+        return can;
     }
     List<Vector2> getRookMoveset(int srcX, int srcY)
     {
