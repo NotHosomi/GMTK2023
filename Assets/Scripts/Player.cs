@@ -51,7 +51,7 @@ public class Player : MonoBehaviour
         {
             selectPiece(null);
         }
-        if (Input.GetMouseButtonDown(0) && currentPlayer == E_Team.White)
+        if (Input.GetMouseButtonDown(0) && currentPlayer == E_Team.White && !failed)
         {
             Vector3 mouse_pos = Input.mousePosition;
             mouse_pos.z = 1;
@@ -177,6 +177,7 @@ public class Player : MonoBehaviour
     }
 
     bool failed = false;
+    [SerializeField] GameObject redBackground;
     public void onFail(E_FailState failtype, List<Vector2> failIndicators)
     {
         failed = true;
@@ -214,6 +215,7 @@ public class Player : MonoBehaviour
                     "\nstalemate";
                 break;
         }
+        redBackground.SetActive(true);
         failNotif.SetActive(true);
         failNotif.GetComponent<SpriteRenderer>().color = Color.white;
         failNotif.GetComponent<WarningHover>().SetWarning(true, failIndicators, failmessage);
