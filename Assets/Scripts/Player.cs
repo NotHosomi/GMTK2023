@@ -142,7 +142,7 @@ public class Player : MonoBehaviour
             if (--iterations == 0)
             {
                 Debug.Log("AI cannot move");
-                endTurn();
+                onFail(E_FailState.NoValidMoves, new List<Vector2>());
                 yield break;
             }
             index = ((index + 1) % pieces.Count);
@@ -180,24 +180,28 @@ public class Player : MonoBehaviour
         {
             case E_FailState.BishopLockout:
                 failmessage =
-                    "Your pawns have blocked your bishop";
+                    "Your pawns have blocked your bishop.";
                 break;
             case E_FailState.BishopLockin:
                 failmessage =
-                    "Their pawns have blocked your bishop";
+                    "Their pawns have blocked your bishop.";
+                break;
+            case E_FailState.BishopBlocker:
+                failmessage =
+                    "An enemy bishop is trapped behind your pawns.";
                 break;
             case E_FailState.PawnTrapped:
                 failmessage =
-                    "Their pawns have blocked your pawn";
+                    "Their pawns have blocked your pawn.";
                 break;
             case E_FailState.PawnTrappedNoDiag:
                 failmessage =
                     "Their pawn has blocked your pawn." +
                     "\nYour pawn cannot move diagonally as there" +
-                    "\nare no more pieces left to be uncaptured";
+                    "\nare no more pieces left to be uncaptured.";
                 break;
             case E_FailState.PawnWall:
-                failmessage = "Your pawns have blocked the other pieces";
+                failmessage = "Your pawns have blocked the other pieces.";
                 break;
             case E_FailState.NoValidMoves:
                 failmessage =

@@ -10,6 +10,7 @@ public enum E_FailState
     PawnTrappedNoDiag,
     BishopLockout,
     BishopLockin,
+    BishopBlocker,
     PawnWall,
 }
 
@@ -158,39 +159,20 @@ public class Board : MonoBehaviour
     public E_FailState checkFail(ref List<Vector2> indicators)
     {
         // check bishop entry
-        if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
+        if(checkBishopLockout(ref indicators))
         {
-            if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
-            {
-                indicators.Add(new Vector2(2, 0));
-                return E_FailState.BishopLockout;
-            }
+            return E_FailState.BishopLockout;
         }
-        if (!testSquareOccupant(5, 0, E_Team.White, E_PieceType.Bish))
+
+        // check if a pawn is trapped
+        if(checkPawnTrapped(ref indicators))
         {
-            if (testSquareOccupant(4, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(6, 1, E_Team.White, E_PieceType.Pawn))
-            {
-                indicators.Add(new Vector2(5, 0));
-                return E_FailState.BishopLockout;
-            }
+            return E_FailState.PawnTrapped;
         }
 
         // check if they've pawn blocked themselves
-        bool pawnBlockFlag = false;
-        for (int i = 8; i < 16; ++i)
+        if(checkPawnWall(ref indicators))
         {
-            if (testSquareOccupant(i, 1, E_Team.White, E_PieceType.Pawn))
-            {
-                pawnBlockFlag = true;
-                break;
-            }
-        }
-        if(pawnBlockFlag)
-        {
-            for(int i = 0; i<8; ++ i)
-            {
-
-            }
             return E_FailState.PawnWall;
         }
 
@@ -272,5 +254,119 @@ public class Board : MonoBehaviour
     public void undo()
     {
         // TODO
+    }
+
+
+    // fail checks
+    //PawnTrapped,
+    //PawnTrappedNoDiag,
+    //BishopLockout,
+    //BishopLockin,
+    //PawnWall,
+    bool checkBishopLockout(ref List<Vector2> hints)
+    {
+        if (!testSquareOccupant(2, 0, E_Team.White, E_PieceType.Bish))
+        {
+            if (testSquareOccupant(1, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(3, 1, E_Team.White, E_PieceType.Pawn))
+            {
+                hints.Add(new Vector2(2, 0));
+                return true;
+            }
+        }
+        if (!testSquareOccupant(5, 0, E_Team.White, E_PieceType.Bish))
+        {
+            if (testSquareOccupant(4, 1, E_Team.White, E_PieceType.Pawn) && testSquareOccupant(6, 1, E_Team.White, E_PieceType.Pawn))
+            {
+                hints.Add(new Vector2(5, 0));
+                return true;
+            }
+        }
+        return false;
+    }
+    bool checkBishopLockin(ref List<Vector2> hints)
+    {
+        bool left;
+        bool right;
+        for (int i = 0; i<8;++i)
+        {
+            if(testSquareOccupant(i, 7, E_Team.White, E_PieceType.Bish))
+            {
+                if (i - 1 < 0)
+                    left = true;
+                else
+                    left = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
+                if (i + 1 > 0)
+                    right = true;
+                else
+                    right = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
+
+                if (left && right)
+                {
+                    hints.Add(new Vector2(i, 7));
+                    if (i - 1 >= 0)
+                        hints.Add(new Vector2(i - 1, 6));
+                    if (i + 1 < 8)
+                        hints.Add(new Vector2(i + 1, 6));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    bool checkPawnTrapped(ref List<Vector2> hints)
+    {
+        if (Piece.s_tPieces[(int)E_Team.Black].nPieces == 16)
+            return false;
+        bool left;
+        bool mid;
+        bool right;
+        for (int i = 0; i < 8; ++i)
+        {
+            if (testSquareOccupant(i, 7, E_Team.White, E_PieceType.Pawn))
+            {
+                if (i - 1 < 0)
+                    left = true;
+                else
+                    left = testSquareOccupant(i - 1, 6, E_Team.Black, E_PieceType.Pawn);
+                if (i + 1 > 0)
+                    right = true;
+                else
+                    right = testSquareOccupant(i + 1, 6, E_Team.Black, E_PieceType.Pawn);
+                mid = testSquareOccupant(i, 6, E_Team.Black, E_PieceType.Pawn);
+
+                hints.Add(new Vector2(i, 7));
+                if (i - 1 >= 0)
+                    hints.Add(new Vector2(i-1, 6));
+                if (i + 1 < 8)
+                    hints.Add(new Vector2(i + 1, 6));
+                hints.Add(new Vector2(i, 6));
+
+                if (left && mid && right)
+                    return true;
+            }
+        }
+        return false;
+    }
+    bool checkPawnTrappedNoDiag(ref List<Vector2> hints)
+    {
+        // check each piece
+        foreach(Piece p in Piece.s_tPieces[(int)E_Team.White].vPieces)
+        {
+            int x = (int)p.getPos().x;
+            int y = (int)p.getPos().y;
+            if (p.getType() == E_PieceType.Pawn                      // if its a pawn
+               && !p.canPawnDiag(x, y)                               // and it can't go diag
+               && p.getPos().y > 1                                   // and its not where it needs to be
+               && testSquareOccupant(x, y-1, E_Team.Black, E_PieceType.Pawn))
+            {
+                hints.Add(new Vector2(x, y));
+                hints.Add(new Vector2(x, y - 1));
+            }
+        }
+        return false;
+    }
+    bool checkPawnWall(ref List<Vector2> hints)
+    {
+        return false;
     }
 }
