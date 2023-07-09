@@ -20,6 +20,7 @@ public enum E_Sound
 public class AudioInterface : MonoBehaviour
 {
     [SerializeField] public Sound[] sounds;
+    public bool MuteMusic = false;
 
     static AudioInterface _i;
     private void Awake()
@@ -133,5 +134,19 @@ public class AudioInterface : MonoBehaviour
     {
         // temp
         playPieceHover();
+    }
+
+    public void clickMute()
+    {
+        MuteMusic = !MuteMusic;
+
+        GameObject canvas = GameObject.Find("Canvas");
+        AudioSource asource = canvas.GetComponent<AudioSource>();
+        asource.mute = MuteMusic;
+
+        GameObject button_sprite = GameObject.Find("button_mute");
+        button_sprite.SetActive(MuteMusic);
+
+        Debug.Log("Mute Music");
     }
 }
